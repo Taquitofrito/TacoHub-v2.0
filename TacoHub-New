@@ -346,6 +346,7 @@ end
 local MainScreen, FloatingScreen
 local updateMerchantSummaryUI, updateVoidUI, closeActiveModalPicker, updateEggUI
 local setAutoHatchToggleState, setAutoHatchLogic, MerchantDropdown, setAutoBuyToggleState, startAutoBuyLogic
+local setVoidToggleState, handleVoidLogic
 
 -- MODAL ALERTA
 local AlertScreen = Instance.new("ScreenGui")
@@ -1262,6 +1263,43 @@ CardShop.LayoutOrder = 3
 local CardVoidFloat, LblVoidFloat = createCard(ScrollFloat, "AUTO VOID")
 CardVoidFloat.LayoutOrder = 4
 
+-- AGREGAR BOTÓN ON/OFF EN LA TARJETA FLOTANTE DE AUTO VOID
+local FloatVoidToggleBtn = Instance.new("TextButton")
+FloatVoidToggleBtn.Size = UDim2.fromOffset(58, 28)
+FloatVoidToggleBtn.Position = UDim2.new(1, -66, 0, 4)
+FloatVoidToggleBtn.Text = ""
+FloatVoidToggleBtn.BackgroundColor3 = THEME.Border
+FloatVoidToggleBtn.Parent = CardVoidFloat
+
+local fvtCorner = Instance.new("UICorner")
+fvtCorner.CornerRadius = UDim.new(1, 0)
+fvtCorner.Parent = FloatVoidToggleBtn
+
+local FloatVoidCircle = Instance.new("Frame")
+FloatVoidCircle.Size = UDim2.fromOffset(22, 22)
+FloatVoidCircle.Position = UDim2.new(0, 3, 0.5, -11)
+FloatVoidCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+FloatVoidCircle.Parent = FloatVoidToggleBtn
+
+local fvcCorner = Instance.new("UICorner")
+fvcCorner.CornerRadius = UDim.new(1, 0)
+fvcCorner.Parent = FloatVoidCircle
+
+local function setFloatVoidToggleVisualState(state)
+    TweenService:Create(FloatVoidToggleBtn, TweenInfo.new(0.2), {BackgroundColor3 = state and THEME.Accent or THEME.Border}):Play()
+    TweenService:Create(FloatVoidCircle, TweenInfo.new(0.2), {Position = state and UDim2.new(1, -25, 0.5, -11) or UDim2.new(0, 3, 0.5, -11)}):Play()
+end
+
+FloatVoidToggleBtn.MouseButton1Click:Connect(function()
+    local targetState = not getgenv().AutoVoidActive
+    if handleVoidLogic then
+        local allowed = handleVoidLogic(targetState)
+        if allowed ~= false then
+            setVoidToggleState(targetState)
+        end
+    end
+end)
+
 -- FUNCIONES DE ACTUALIZACIÓN DE INTERFAZ
 local function buildEggString()
     local lines = { string.format("★ Total Mascotas: %s", formatNumber(totalPetsCount)) }
@@ -1791,6 +1829,7 @@ local BtnSaveShopConfig = Instance.new("TextButton")
 BtnSaveShopConfig.Size = UDim2.new(0.68, -5, 1, 0)
 BtnSaveShopConfig.Position = UDim2.new(0, 0, 0, 0)
 BtnSaveShopConfig.BackgroundColor3 = THEME.Accent
+BtnSaveShopShopConfig = nil
 BtnSaveShopConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
 BtnSaveShopConfig.Font = Enum.Font.GothamBold
 BtnSaveShopConfig.TextSize = 14
@@ -1886,10 +1925,13 @@ end
 -- PESTAÑA: VOID
 local CardVoidStatus, LblVoidStatus
 
-local AutoVoidToggle = createToggle(TabVoid, "Activar Auto Void & Claim", false, function(value)
+handleVoidLogic = function(value)
     voidSessionToken = voidSessionToken + 1
     local currentToken = voidSessionToken
     getgenv().AutoVoidActive = value
+
+    setFloatVoidToggleVisualState(value)
+    if setVoidToggleState then setVoidToggleState(value) end
 
     updateOverlayUI()
 
@@ -1939,7 +1981,10 @@ local AutoVoidToggle = createToggle(TabVoid, "Activar Auto Void & Claim", false,
         LblVoidStatus.Text = "Auto Void desactivado."
     end
     return true
-end)
+end
+
+local AutoVoidToggle
+AutoVoidToggle, setVoidToggleState = createToggle(TabVoid, "Activar Auto Void & Claim", false, handleVoidLogic)
 
 local CardVoidStats, LblVoidStats = createCard(TabVoid, "Estadísticas del Void")
 CardVoidStatus, LblVoidStatus = createCard(TabVoid, "Estado Void")
