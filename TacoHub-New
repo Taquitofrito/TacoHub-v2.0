@@ -1,0 +1,2114 @@
+-- TacoHub v2.6 (Versión Optimizada - Posiciones Independientes & UI & Anti-AFK Integrado)
+-- =================================================================
+
+if getgenv().TacoHubLoaded and getgenv().TacoHubUnload then
+    pcall(getgenv().TacoHubUnload)
+    task.wait(0.1)
+end
+getgenv().TacoHubLoaded = true
+
+-- SERVICIOS
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
+local VirtualUser = game:GetService("VirtualUser")
+local player = Players.LocalPlayer
+
+local Knit = require(ReplicatedStorage.Packages.Knit)
+
+-- SERVICIOS GAME
+local PetVoidService = ReplicatedStorage.Packages.Knit.Services:WaitForChild("PetVoidService")
+local PetService = ReplicatedStorage.Packages.Knit.Services:WaitForChild("PetService")
+local onCraftToVoid = PetVoidService.RE:WaitForChild("onCraftToVoid")
+local onClaim = PetVoidService.RE:WaitForChild("onClaim")
+
+-- PERSISTENCIA JSON (HUEVOS)
+local CONFIG_FILE = "TacoHub_EggConfig.json"
+local savedEggConfig = { Egg = "", Amount = "50x", AutoStart = false }
+
+local function loadSavedEggConfig()
+    if readfile and isfile and isfile(CONFIG_FILE) then
+        local success, data = pcall(function() return HttpService:JSONDecode(readfile(CONFIG_FILE)) end)
+        if success and typeof(data) == "table" then
+            savedEggConfig.Egg = data.Egg or ""
+            savedEggConfig.Amount = data.Amount or "50x"
+            savedEggConfig.AutoStart = data.AutoStart == true
+        end
+    end
+end
+
+local function saveEggConfigToFile()
+    if writefile then pcall(function() writefile(CONFIG_FILE, HttpService:JSONEncode(savedEggConfig)) end) end
+end
+loadSavedEggConfig()
+
+-- PERSISTENCIA JSON (TIENDA)
+local SHOP_CONFIG_FILE = "TacoHub_ShopConfig.json"
+local savedShopConfig = { Merchant = "", Items = {}, AutoStart = false }
+
+local function loadSavedShopConfig()
+    if readfile and isfile and isfile(SHOP_CONFIG_FILE) then
+        local success, data = pcall(function() return HttpService:JSONDecode(readfile(SHOP_CONFIG_FILE)) end)
+        if success and typeof(data) == "table" then
+            savedShopConfig.Merchant = data.Merchant or ""
+            savedShopConfig.Items = typeof(data.Items) == "table" and data.Items or {}
+            savedShopConfig.AutoStart = data.AutoStart == true
+        end
+    end
+end
+
+local function saveShopConfigToFile()
+    if writefile then pcall(function() writefile(SHOP_CONFIG_FILE, HttpService:JSONEncode(savedShopConfig)) end) end
+end
+loadSavedShopConfig()
+
+-- ESTADOS GLOBALES
+local petsInventoryTrack = {}
+local totalPetsCount = 0
+local lastSuccessfulHatchTime = tick()
+local hatchSessionToken = 0
+local selectedEggValue = ""
+local selectedAmountValue = "50x"
+
+local purchasedMerchantItems = {}
+local selectedMerchantItems = {}
+local totalMerchantPurchasesCount = 0
+local buySessionToken = 0
+local merchantTimerEndTime = nil
+local selectedMerchantValue = ""
+
+local voidSessionToken = 0
+local voidSentCount = 0
+local voidClaimedCount = 0
+
+local isScriptRunning = true
+local connectionsToClean = {}
+
+-- TEMA Y PALETA
+local THEME = {
+    Background = Color3.fromRGB(15, 15, 20),
+    Sidebar = Color3.fromRGB(25, 25, 35),
+    CardBg = Color3.fromRGB(30, 32, 45),
+    Accent = Color3.fromRGB(120, 50, 200),
+    AccentDark = Color3.fromRGB(80, 25, 140),
+    AccentLight = Color3.fromRGB(170, 110, 245),
+    SoftPurple = Color3.fromRGB(110, 90, 190),
+    Text = Color3.fromRGB(255, 255, 255),
+    TextDark = Color3.fromRGB(15, 15, 20),
+    SubText = Color3.fromRGB(200, 205, 220),
+    Border = Color3.fromRGB(60, 60, 85),
+    TextOutline = Color3.fromRGB(0, 0, 0),
+    Danger = Color3.fromRGB(230, 60, 60),
+    Yellow = Color3.fromRGB(255, 220, 0),
+    Green = Color3.fromRGB(50, 200, 90),
+    StatusActive = Color3.fromRGB(70, 220, 90),
+    StatusInactive = Color3.fromRGB(150, 150, 160)
+}
+
+-- FUNCIONALIDADES DE UTILIDAD
+local function formatNumber(n)
+    local num = tonumber(n) or 0
+    local formatted = tostring(math.floor(num))
+    local k
+    while true do
+        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+        if k == 0 then break end
+    end
+    return formatted
+end
+
+-- BANNER FLOTANTE TEMPORAL DE NOTIFICACIÓN ANTI-AFK
+local function mostrarBannerAFK()
+    pcall(function()
+        local existingBanner = CoreGui:FindFirstChild("TACOHUB_AFK_Notification") or player:WaitForChild("PlayerGui"):FindFirstChild("TACOHUB_AFK_Notification")
+        if existingBanner then existingBanner:Destroy() end
+    end)
+
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "TACOHUB_AFK_Notification"
+    sg.ResetOnSpawn = false
+    sg.DisplayOrder = 200
+    pcall(function() sg.Parent = CoreGui end)
+    if not sg.Parent then sg.Parent = player:WaitForChild("PlayerGui") end
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.fromOffset(360, 42)
+    frame.Position = UDim2.new(0.5, -180, 0.08, 0)
+    frame.BackgroundColor3 = THEME.Sidebar
+    frame.BorderSizePixel = 0
+    frame.Parent = sg
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = THEME.AccentLight
+    stroke.Thickness = 1.5
+    stroke.Parent = frame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = "🛡️ Roblox intentó desconectarte | Anti-AFK Evitado"
+    label.TextColor3 = THEME.StatusActive
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 14
+    label.Parent = frame
+
+    task.delay(2, function()
+        if sg and sg.Parent then sg:Destroy() end
+    end)
+end
+
+-- LÓGICA AUTOMÁTICA ANTI-AFK
+table.insert(connectionsToClean, player.Idled:Connect(function()
+    if isScriptRunning then
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+        mostrarBannerAFK()
+    end
+end))
+
+-- UNLOAD GLOBAL
+getgenv().TacoHubUnload = function()
+    isScriptRunning = false
+    hatchSessionToken = hatchSessionToken + 1
+    buySessionToken = buySessionToken + 1
+    voidSessionToken = voidSessionToken + 1
+    getgenv().AutoVoidActive = false
+    getgenv().AutoHatchActive = false
+    getgenv().AutoBuyActive = false
+    
+    for _, conn in ipairs(connectionsToClean) do
+        if conn and conn.Connected then conn:Disconnect() end
+    end
+    table.clear(connectionsToClean)
+    
+    pcall(function()
+        local guis = {"TACOHUB_MainUI", "TACOHUB_ItemModal", "TACOHUB_FloatingUI", "TACOHUB_ConfirmModal", "TACOHUB_PickerModal", "TACOHUB_AlertModal", "TACOHUB_AFK_Notification"}
+        for _, name in ipairs(guis) do
+            local g = CoreGui:FindFirstChild(name) or player:WaitForChild("PlayerGui"):FindFirstChild(name)
+            if g then g:Destroy() end
+        end
+    end)
+end
+
+local function applyTextStroke(textLabel)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = THEME.TextOutline
+    stroke.Thickness = 1.2
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+    stroke.Parent = textLabel
+    return stroke
+end
+
+-- RETORNO DE DATOS DEL JUEGO
+local function getEggNames()
+    local eggNamesSet = {}
+    local function registerEgg(rawName)
+        if not rawName then return end
+        local cleanName = tostring(rawName):gsub("%s*[Ee][Gg][Gg]%s*$", ""):match("^%s*(.-)%s*$")
+        if not cleanName or cleanName == "" or cleanName:lower():find("rewind") or tonumber(cleanName) then return end
+        if cleanName == "IceSpiked" then cleanName = "IceSpikes" end
+        eggNamesSet[cleanName] = true
+    end
+
+    pcall(function()
+        local dataFolder = ReplicatedStorage:FindFirstChild("Data")
+        if dataFolder then
+            local eggsModule = dataFolder:FindFirstChild("Eggs") or dataFolder:FindFirstChild("EggData")
+            if eggsModule then
+                local dataTable = require(eggsModule)
+                if typeof(dataTable) == "table" then
+                    for eggName, _ in pairs(dataTable) do registerEgg(eggName) end
+                end
+            end
+        end
+    end)
+
+    pcall(function()
+        local workspaceEggs = workspace:FindFirstChild("Eggs") or workspace:FindFirstChild("EggModels")
+        if workspaceEggs then
+            for _, eggModel in ipairs(workspaceEggs:GetChildren()) do registerEgg(eggModel.Name) end
+        end
+    end)
+
+    local manualEventEggs = {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Cave", "Lavacrystal", "IceSpikes", "Admin"}
+    for _, manualEgg in ipairs(manualEventEggs) do registerEgg(manualEgg) end
+
+    local cleanEggList = {}
+    for eggName in pairs(eggNamesSet) do table.insert(cleanEggList, eggName) end
+    table.sort(cleanEggList)
+    return cleanEggList
+end
+
+local function getAllMerchantItems()
+    local LimitedMerchant = require(ReplicatedStorage.Data.LimitedMerchant)
+    local merchantList = {}
+    local merchantItemsMap = {}
+    local itemDataMap = {}
+
+    for merchantName, merchantData in pairs(LimitedMerchant) do
+        if typeof(merchantData) == "table" and merchantData.Items then
+            table.insert(merchantList, merchantName)
+            merchantItemsMap[merchantName] = {}
+
+            for slotIndex, itemList in pairs(merchantData.Items) do
+                for itemIndex, item in ipairs(itemList) do
+                    local title = item.Title or "Desconocido"
+                    local price = item.Price or 0
+                    local currency = typeof(item.Currency) == "string" and item.Currency or (typeof(item.Currency) == "table" and item.Currency.Item or "Moneda")
+                    local cleanName = string.format("Slot %s: %s (%.0f %s)", slotIndex, title, price, currency)
+                    
+                    table.insert(merchantItemsMap[merchantName], cleanName)
+                    itemDataMap[merchantName .. ":" .. cleanName] = {
+                        merchant = merchantName, slot = tonumber(slotIndex), index = itemIndex, title = title, raw = item
+                    }
+                end
+            end
+            table.sort(merchantItemsMap[merchantName])
+        end
+    end
+    table.sort(merchantList)
+
+    return merchantList, merchantItemsMap, itemDataMap
+end
+
+local function getLiveStockData()
+    local liveData = {}
+    pcall(function()
+        local CustomReplicaController = Knit.GetController("CustomReplicaController")
+        local replica = CustomReplicaController and CustomReplicaController:GetReplica()
+        if replica and replica.Data and replica.Data.LimitedMerchant then
+            local LimitedMerchant = require(ReplicatedStorage.Data.LimitedMerchant)
+            for merchantName, merchantData in pairs(replica.Data.LimitedMerchant) do
+                if merchantData and merchantData.Items then
+                    for slotIndex, itemData in pairs(merchantData.Items) do
+                        local currentItem = LimitedMerchant[merchantName] and 
+                                          LimitedMerchant[merchantName].Items and 
+                                          LimitedMerchant[merchantName].Items[slotIndex] and 
+                                          LimitedMerchant[merchantName].Items[slotIndex][itemData.Index]
+                        
+                        liveData[merchantName .. ":" .. tostring(slotIndex)] = {
+                            stock = itemData.Stock,
+                            index = itemData.Index,
+                            title = currentItem and currentItem.Title or "Desconocido",
+                            fullItem = currentItem
+                        }
+                    end
+                end
+            end
+        end
+    end)
+    return liveData
+end
+
+local function formatTime(seconds)
+    if not seconds or seconds <= 0 then return "00:00" end
+    local mins = math.floor(seconds / 60)
+    local secs = math.floor(seconds % 60)
+    return string.format("%02d:%02d", mins, secs)
+end
+
+-- SISTEMA DE ARRASTRE
+local function applyDragLogic(dragHandle, targetFrame)
+    local dragging, dragStart, startPos = false, nil, nil
+    dragHandle.Active = true
+    targetFrame.Active = true
+
+    table.insert(connectionsToClean, dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = targetFrame.Position
+        end
+    end))
+
+    table.insert(connectionsToClean, UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            targetFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end))
+
+    table.insert(connectionsToClean, UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end))
+end
+
+-- DECLARACIONES PREVIAS
+local MainScreen, FloatingScreen
+local updateMerchantSummaryUI, updateVoidUI, closeActiveModalPicker, updateEggUI
+local setAutoHatchToggleState, setAutoHatchLogic, MerchantDropdown, setAutoBuyToggleState, startAutoBuyLogic
+local setAutoVoidToggleState, setAutoVoidLogic, setFloatVoidToggleVisualState
+
+-- MODAL ALERTA
+local AlertScreen = Instance.new("ScreenGui")
+AlertScreen.Name = "TACOHUB_AlertModal"
+AlertScreen.ResetOnSpawn = false
+AlertScreen.Enabled = false
+AlertScreen.DisplayOrder = 105
+pcall(function() AlertScreen.Parent = CoreGui end)
+if not AlertScreen.Parent then AlertScreen.Parent = player:WaitForChild("PlayerGui") end
+
+local AlertOverlay = Instance.new("TextButton")
+AlertOverlay.Size = UDim2.fromScale(1, 1)
+AlertOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+AlertOverlay.BackgroundTransparency = 0.5
+AlertOverlay.Text = ""
+AlertOverlay.AutoButtonColor = false
+AlertOverlay.Parent = AlertScreen
+
+local AlertFrame = Instance.new("Frame")
+AlertFrame.Size = UDim2.fromOffset(400, 190)
+AlertFrame.Position = UDim2.fromScale(0.5, 0.5)
+AlertFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+AlertFrame.BackgroundColor3 = THEME.Background
+AlertFrame.BorderSizePixel = 0
+AlertFrame.Active = true
+AlertFrame.Parent = AlertScreen
+
+local AlertCorner = Instance.new("UICorner")
+AlertCorner.CornerRadius = UDim.new(0, 10)
+AlertCorner.Parent = AlertFrame
+
+local AlertStroke = Instance.new("UIStroke")
+AlertStroke.Color = THEME.Border
+AlertStroke.Thickness = 2
+AlertStroke.Parent = AlertFrame
+
+local AlertTitle = Instance.new("TextLabel")
+AlertTitle.Size = UDim2.new(1, -20, 0, 40)
+AlertTitle.Position = UDim2.new(0, 10, 0, 10)
+AlertTitle.Text = "⚠️ Atención"
+AlertTitle.TextColor3 = THEME.Yellow
+AlertTitle.Font = Enum.Font.GothamBlack
+AlertTitle.TextSize = 22
+AlertTitle.BackgroundTransparency = 1
+AlertTitle.Parent = AlertFrame
+
+local AlertMsg = Instance.new("TextLabel")
+AlertMsg.Size = UDim2.new(1, -30, 0, 60)
+AlertMsg.Position = UDim2.new(0, 15, 0, 50)
+AlertMsg.Text = "Mensaje de advertencia..."
+AlertMsg.TextColor3 = THEME.Text
+AlertMsg.Font = Enum.Font.GothamMedium
+AlertMsg.TextSize = 17
+AlertMsg.TextWrapped = true
+AlertMsg.BackgroundTransparency = 1
+AlertMsg.Parent = AlertFrame
+
+local BtnAlertOk = Instance.new("TextButton")
+BtnAlertOk.Size = UDim2.fromOffset(140, 40)
+BtnAlertOk.Position = UDim2.new(0.5, -70, 1, -52)
+BtnAlertOk.BackgroundColor3 = THEME.Accent
+BtnAlertOk.Text = "Entendido"
+BtnAlertOk.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnAlertOk.Font = Enum.Font.GothamBold
+BtnAlertOk.TextSize = 17
+BtnAlertOk.Parent = AlertFrame
+
+local btnAlertCorner = Instance.new("UICorner")
+btnAlertCorner.CornerRadius = UDim.new(0, 6)
+btnAlertCorner.Parent = BtnAlertOk
+
+BtnAlertOk.MouseButton1Click:Connect(function() AlertScreen.Enabled = false end)
+
+local function showAlert(titleText, msgText)
+    AlertTitle.Text = titleText or "⚠️ Atención"
+    AlertMsg.Text = msgText or ""
+    AlertScreen.Enabled = true
+end
+
+-- MODAL CONFIRMACIÓN
+local ConfirmScreen = Instance.new("ScreenGui")
+ConfirmScreen.Name = "TACOHUB_ConfirmModal"
+ConfirmScreen.ResetOnSpawn = false
+ConfirmScreen.Enabled = false
+ConfirmScreen.DisplayOrder = 100
+pcall(function() ConfirmScreen.Parent = CoreGui end)
+if not ConfirmScreen.Parent then ConfirmScreen.Parent = player:WaitForChild("PlayerGui") end
+
+local OverlayBlocker = Instance.new("TextButton")
+OverlayBlocker.Size = UDim2.fromScale(1, 1)
+OverlayBlocker.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+OverlayBlocker.BackgroundTransparency = 0.5
+OverlayBlocker.Text = ""
+OverlayBlocker.AutoButtonColor = false
+OverlayBlocker.Parent = ConfirmScreen
+
+local ConfirmFrame = Instance.new("Frame")
+ConfirmFrame.Size = UDim2.fromOffset(420, 210)
+ConfirmFrame.Position = UDim2.fromScale(0.5, 0.5)
+ConfirmFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+ConfirmFrame.BackgroundColor3 = THEME.Background
+ConfirmFrame.BorderSizePixel = 0
+ConfirmFrame.Active = true
+ConfirmFrame.Parent = ConfirmScreen
+
+local ConfirmCorner = Instance.new("UICorner")
+ConfirmCorner.CornerRadius = UDim.new(0, 10)
+ConfirmCorner.Parent = ConfirmFrame
+
+local ConfirmStroke = Instance.new("UIStroke")
+ConfirmStroke.Color = THEME.Border
+ConfirmStroke.Thickness = 2
+ConfirmStroke.Parent = ConfirmFrame
+
+local ConfirmTitle = Instance.new("TextLabel")
+ConfirmTitle.Size = UDim2.new(1, -20, 0, 40)
+ConfirmTitle.Position = UDim2.new(0, 10, 0, 10)
+ConfirmTitle.Text = "⚠️ Confirmar Cierre"
+ConfirmTitle.TextColor3 = THEME.Danger
+ConfirmTitle.Font = Enum.Font.GothamBlack
+ConfirmTitle.TextSize = 22
+ConfirmTitle.BackgroundTransparency = 1
+ConfirmTitle.Parent = ConfirmFrame
+
+local ConfirmMsg = Instance.new("TextLabel")
+ConfirmMsg.Size = UDim2.new(1, -30, 0, 65)
+ConfirmMsg.Position = UDim2.new(0, 15, 0, 50)
+ConfirmMsg.Text = "¿Estás seguro de que deseas cerrar TacoHub?\nSe detendrán todas las funciones."
+ConfirmMsg.TextColor3 = THEME.Text
+ConfirmMsg.Font = Enum.Font.GothamMedium
+ConfirmMsg.TextSize = 17
+ConfirmMsg.TextWrapped = true
+ConfirmMsg.BackgroundTransparency = 1
+ConfirmMsg.Parent = ConfirmFrame
+
+local BtnYes = Instance.new("TextButton")
+BtnYes.Size = UDim2.fromOffset(160, 44)
+BtnYes.Position = UDim2.new(0, 25, 1, -58)
+BtnYes.BackgroundColor3 = THEME.Danger
+BtnYes.Text = "Sí, Cerrar"
+BtnYes.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnYes.Font = Enum.Font.GothamBold
+BtnYes.TextSize = 18
+BtnYes.Parent = ConfirmFrame
+
+local btnYesCorner = Instance.new("UICorner")
+btnYesCorner.CornerRadius = UDim.new(0, 6)
+btnYesCorner.Parent = BtnYes
+
+local BtnNo = Instance.new("TextButton")
+BtnNo.Size = UDim2.fromOffset(160, 44)
+BtnNo.Position = UDim2.new(1, -185, 1, -58)
+BtnNo.BackgroundColor3 = THEME.CardBg
+BtnNo.Text = "Cancelar"
+BtnNo.TextColor3 = THEME.Text
+BtnNo.Font = Enum.Font.GothamBold
+BtnNo.TextSize = 18
+BtnNo.Parent = ConfirmFrame
+
+local btnNoCorner = Instance.new("UICorner")
+btnNoCorner.CornerRadius = UDim.new(0, 6)
+btnNoCorner.Parent = BtnNo
+
+BtnYes.MouseButton1Click:Connect(function() getgenv().TacoHubUnload() end)
+BtnNo.MouseButton1Click:Connect(function() ConfirmScreen.Enabled = false end)
+
+-- INTERFAZ PRINCIPAL
+MainScreen = Instance.new("ScreenGui")
+MainScreen.Name = "TACOHUB_MainUI"
+MainScreen.ResetOnSpawn = false
+MainScreen.DisplayOrder = 10
+pcall(function() MainScreen.Parent = CoreGui end)
+if not MainScreen.Parent then MainScreen.Parent = player:WaitForChild("PlayerGui") end
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.fromOffset(720, 500)
+MainFrame.Position = UDim2.fromScale(0.5, 0.5)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = THEME.Background
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Parent = MainScreen
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = THEME.Border
+MainStroke.Thickness = 2
+MainStroke.Parent = MainFrame
+
+local MainHeader = Instance.new("Frame")
+MainHeader.Size = UDim2.new(1, 0, 0, 52)
+MainHeader.BackgroundColor3 = THEME.Sidebar
+MainHeader.BorderSizePixel = 0
+MainHeader.Active = true
+MainHeader.Parent = MainFrame
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 10)
+HeaderCorner.Parent = MainHeader
+
+applyDragLogic(MainHeader, MainFrame)
+
+local TitleText = Instance.new("TextLabel")
+TitleText.Size = UDim2.new(0, 350, 1, 0)
+TitleText.Position = UDim2.new(0, 15, 0, 0)
+TitleText.Text = "🌮 TACOHUB <font color=\"#AA66FF\">v2.6</font>"
+TitleText.RichText = true
+TitleText.TextColor3 = THEME.Text
+TitleText.Font = Enum.Font.GothamBlack
+TitleText.TextSize = 24
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.BackgroundTransparency = 1
+TitleText.Parent = MainHeader
+
+applyTextStroke(TitleText)
+
+local MinimizeMainBtn = Instance.new("TextButton")
+MinimizeMainBtn.Size = UDim2.fromOffset(38, 40)
+MinimizeMainBtn.Position = UDim2.new(1, -120, 0, 6)
+MinimizeMainBtn.Text = "−"
+MinimizeMainBtn.TextColor3 = THEME.SubText
+MinimizeMainBtn.Font = Enum.Font.GothamBlack
+MinimizeMainBtn.TextSize = 26
+MinimizeMainBtn.BackgroundTransparency = 1
+MinimizeMainBtn.Parent = MainHeader
+
+MinimizeMainBtn.MouseButton1Click:Connect(function()
+    closeActiveModalPicker()
+    MainScreen.Enabled = false
+    FloatingScreen.Enabled = true
+end)
+
+local CloseMainBtn = Instance.new("TextButton")
+CloseMainBtn.Size = UDim2.fromOffset(80, 40)
+CloseMainBtn.Position = UDim2.new(1, -85, 0, 6)
+CloseMainBtn.Text = "Cerrar"
+CloseMainBtn.TextColor3 = THEME.SubText
+CloseMainBtn.Font = Enum.Font.GothamBold
+CloseMainBtn.TextSize = 17
+CloseMainBtn.BackgroundTransparency = 1
+CloseMainBtn.Parent = MainHeader
+
+CloseMainBtn.MouseButton1Click:Connect(function() ConfirmScreen.Enabled = true end)
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 195, 1, -52)
+Sidebar.Position = UDim2.new(0, 0, 0, 52)
+Sidebar.BackgroundColor3 = THEME.Sidebar
+Sidebar.BorderSizePixel = 0
+Sidebar.ZIndex = 2
+Sidebar.Parent = MainFrame
+
+local SidebarList = Instance.new("UIListLayout")
+SidebarList.Padding = UDim.new(0, 8)
+SidebarList.SortOrder = Enum.SortOrder.LayoutOrder
+SidebarList.Parent = Sidebar
+
+local SidebarPadding = Instance.new("UIPadding")
+SidebarPadding.PaddingTop = UDim.new(0, 12)
+SidebarPadding.PaddingLeft = UDim.new(0, 10)
+SidebarPadding.PaddingRight = UDim.new(0, 10)
+SidebarPadding.Parent = Sidebar
+
+local ContentArea = Instance.new("Frame")
+ContentArea.Size = UDim2.new(1, -195, 1, -52)
+ContentArea.Position = UDim2.new(0, 195, 0, 52)
+ContentArea.BackgroundTransparency = 1
+ContentArea.BorderSizePixel = 0
+ContentArea.ZIndex = 1
+ContentArea.Parent = MainFrame
+
+local ModalScreen = Instance.new("ScreenGui")
+ModalScreen.Name = "TACOHUB_ItemModal"
+ModalScreen.ResetOnSpawn = false
+ModalScreen.Enabled = false
+ModalScreen.DisplayOrder = 20
+pcall(function() ModalScreen.Parent = CoreGui end)
+if not ModalScreen.Parent then ModalScreen.Parent = player:WaitForChild("PlayerGui") end
+
+local PickerModalScreen = Instance.new("ScreenGui")
+PickerModalScreen.Name = "TACOHUB_PickerModal"
+PickerModalScreen.ResetOnSpawn = false
+PickerModalScreen.Enabled = false
+PickerModalScreen.DisplayOrder = 30
+pcall(function() PickerModalScreen.Parent = CoreGui end)
+if not PickerModalScreen.Parent then PickerModalScreen.Parent = player:WaitForChild("PlayerGui") end
+
+closeActiveModalPicker = function()
+    PickerModalScreen.Enabled = false
+    for _, child in ipairs(PickerModalScreen:GetChildren()) do child:Destroy() end
+end
+
+local TabFrames = {}
+local TabButtons = {}
+
+local function createTab(name, icon)
+    local tabContainer = Instance.new("ScrollingFrame")
+    tabContainer.Size = UDim2.new(1, -16, 1, -16)
+    tabContainer.Position = UDim2.new(0, 8, 0, 8)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.BorderSizePixel = 0
+    tabContainer.ScrollBarThickness = 6
+    tabContainer.ScrollBarImageColor3 = THEME.AccentLight
+    tabContainer.Visible = false
+    tabContainer.Parent = ContentArea
+
+    local tabList = Instance.new("UIListLayout")
+    tabList.Padding = UDim.new(0, 12)
+    tabList.SortOrder = Enum.SortOrder.LayoutOrder
+    tabList.Parent = tabContainer
+
+    table.insert(connectionsToClean, tabList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        tabContainer.CanvasSize = UDim2.new(0, 0, 0, tabList.AbsoluteContentSize.Y + 15)
+    end))
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 48)
+    btn.BackgroundColor3 = THEME.Background
+    btn.Text = " " .. icon .. "  " .. name:upper()
+    btn.TextColor3 = THEME.SubText
+    btn.Font = Enum.Font.GothamBlack
+    btn.TextSize = 17
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.ZIndex = 3
+    btn.Parent = Sidebar
+
+    applyTextStroke(btn)
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        closeActiveModalPicker()
+        ModalScreen.Enabled = false
+        for _, tFrame in pairs(TabFrames) do tFrame.Visible = false end
+        for _, tBtn in pairs(TabButtons) do 
+            tBtn.BackgroundColor3 = THEME.Background 
+            tBtn.TextColor3 = THEME.SubText
+        end
+        tabContainer.Visible = true
+        btn.BackgroundColor3 = THEME.CardBg
+        btn.TextColor3 = THEME.AccentLight
+    end)
+
+    TabFrames[name] = tabContainer
+    TabButtons[name] = btn
+
+    return tabContainer
+end
+
+local TabHuevos = createTab("Huevos", "🥚")
+local TabMerchant = createTab("Tiendas", "🛒")
+local TabVoid = createTab("Void", "🌀")
+local TabAFK = createTab("AFK", "🛡️")
+
+local function createSectionHeader(parent, text)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, 0, 0, 32)
+    lbl.Text = text
+    lbl.TextColor3 = THEME.AccentLight
+    lbl.Font = Enum.Font.GothamBlack
+    lbl.TextSize = 20
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.BackgroundTransparency = 1
+    lbl.Parent = parent
+    applyTextStroke(lbl)
+    return lbl
+end
+
+-- COMPONENTES UI
+local function createCard(parent, title)
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, 0, 0, 100)
+    card.BackgroundColor3 = THEME.CardBg
+    card.Parent = parent
+
+    local cCorner = Instance.new("UICorner")
+    cCorner.CornerRadius = UDim.new(0, 8)
+    cCorner.Parent = card
+
+    local cStroke = Instance.new("UIStroke")
+    cStroke.Color = THEME.Border
+    cStroke.Thickness = 1
+    cStroke.Parent = card
+
+    local tLbl = Instance.new("TextLabel")
+    tLbl.Name = "CardTitle"
+    tLbl.Size = UDim2.new(1, -16, 0, 28)
+    tLbl.Position = UDim2.new(0, 8, 0, 6)
+    tLbl.Text = title
+    tLbl.RichText = true
+    tLbl.TextColor3 = THEME.AccentLight
+    tLbl.Font = Enum.Font.GothamBlack
+    tLbl.TextSize = 18
+    tLbl.TextXAlignment = Enum.TextXAlignment.Left
+    tLbl.BackgroundTransparency = 1
+    tLbl.Parent = card
+    applyTextStroke(tLbl)
+
+    local cLbl = Instance.new("TextLabel")
+    cLbl.Name = "CardContent"
+    cLbl.Size = UDim2.new(1, -16, 1, -38)
+    cLbl.Position = UDim2.new(0, 8, 0, 34)
+    cLbl.Text = "Cargando..."
+    cLbl.RichText = true
+    cLbl.TextColor3 = THEME.Text
+    cLbl.Font = Enum.Font.GothamMedium
+    cLbl.TextSize = 16
+    cLbl.TextXAlignment = Enum.TextXAlignment.Left
+    cLbl.TextYAlignment = Enum.TextYAlignment.Top
+    cLbl.TextWrapped = true
+    cLbl.BackgroundTransparency = 1
+    cLbl.Parent = card
+
+    return card, cLbl, tLbl
+end
+
+local function createToggle(parent, text, default, callback)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 56)
+    container.BackgroundColor3 = THEME.CardBg
+    container.Parent = parent
+
+    local cCorner = Instance.new("UICorner")
+    cCorner.CornerRadius = UDim.new(0, 8)
+    cCorner.Parent = container
+
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -80, 1, 0)
+    lbl.Position = UDim2.new(0, 12, 0, 0)
+    lbl.Text = text
+    lbl.TextColor3 = THEME.Text
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 18
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.BackgroundTransparency = 1
+    lbl.Parent = container
+
+    local toggleBtn = Instance.new("TextButton")
+    toggleBtn.Size = UDim2.fromOffset(58, 32)
+    toggleBtn.Position = UDim2.new(1, -68, 0.5, -16)
+    toggleBtn.Text = ""
+    toggleBtn.BackgroundColor3 = default and THEME.Accent or THEME.Border
+    toggleBtn.Parent = container
+
+    local tCorner = Instance.new("UICorner")
+    tCorner.CornerRadius = UDim.new(1, 0)
+    tCorner.Parent = toggleBtn
+
+    local circle = Instance.new("Frame")
+    circle.Size = UDim2.fromOffset(24, 24)
+    circle.Position = default and UDim2.new(1, -28, 0.5, -12) or UDim2.new(0, 4, 0.5, -12)
+    circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    circle.Parent = toggleBtn
+
+    local cirCorner = Instance.new("UICorner")
+    cirCorner.CornerRadius = UDim.new(1, 0)
+    cirCorner.Parent = circle
+
+    local state = default
+
+    local function setVisualState(newState)
+        state = newState
+        TweenService:Create(toggleBtn, TweenInfo.new(0.2), {BackgroundColor3 = state and THEME.Accent or THEME.Border}):Play()
+        TweenService:Create(circle, TweenInfo.new(0.2), {Position = state and UDim2.new(1, -28, 0.5, -12) or UDim2.new(0, 4, 0.5, -12)}):Play()
+    end
+
+    toggleBtn.MouseButton1Click:Connect(function()
+        local targetState = not state
+        local allowed = callback(targetState)
+        if allowed ~= false then setVisualState(targetState) end
+    end)
+
+    return container, setVisualState, function(newState)
+        local allowed = callback(newState)
+        if allowed ~= false then setVisualState(newState) end
+    end
+end
+
+local function createCustomDropdown(parent, labelText, btnText, options, defaultVal, callback)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 56)
+    container.BackgroundColor3 = THEME.CardBg
+    container.Parent = parent
+
+    local cCorner = Instance.new("UICorner")
+    cCorner.CornerRadius = UDim.new(0, 8)
+    cCorner.Parent = container
+
+    local selectedValue = defaultVal or ""
+
+    local TitleLbl = Instance.new("TextLabel")
+    TitleLbl.Size = UDim2.new(0.58, 0, 1, 0)
+    TitleLbl.Position = UDim2.new(0, 12, 0, 0)
+    TitleLbl.RichText = true
+    TitleLbl.Font = Enum.Font.GothamMedium
+    TitleLbl.TextSize = 18
+    TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLbl.BackgroundTransparency = 1
+    TitleLbl.Parent = container
+
+    local ActionBtn = Instance.new("TextButton")
+    ActionBtn.Size = UDim2.new(0.38, -10, 0, 40)
+    ActionBtn.Position = UDim2.new(0.62, 0, 0.5, -20)
+    ActionBtn.BackgroundColor3 = THEME.Sidebar
+    ActionBtn.Text = btnText
+    ActionBtn.TextColor3 = THEME.Text
+    ActionBtn.Font = Enum.Font.GothamMedium
+    ActionBtn.TextSize = 16
+    ActionBtn.BorderSizePixel = 0
+    ActionBtn.TextWrapped = true
+    ActionBtn.Parent = container
+
+    local abCorner = Instance.new("UICorner")
+    abCorner.CornerRadius = UDim.new(0, 6)
+    abCorner.Parent = ActionBtn
+
+    local function updateText()
+        local valDisplay = (selectedValue and selectedValue ~= "") and selectedValue or "Ninguno"
+        TitleLbl.Text = string.format("<font color=\"#FFFFFF\">%s:</font> <font color=\"#FFDC00\"><b>%s</b></font>", labelText, valDisplay)
+    end
+    updateText()
+
+    local function openPicker()
+        closeActiveModalPicker()
+
+        local Overlay = Instance.new("TextButton")
+        Overlay.Size = UDim2.fromScale(1, 1)
+        Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Overlay.BackgroundTransparency = 0.55
+        Overlay.Text = ""
+        Overlay.AutoButtonColor = false
+        Overlay.Parent = PickerModalScreen
+
+        local Frame = Instance.new("Frame")
+        Frame.Size = UDim2.fromOffset(460, 400)
+        Frame.Position = UDim2.fromScale(0.5, 0.5)
+        Frame.AnchorPoint = Vector2.new(0.5, 0.5)
+        Frame.BackgroundColor3 = THEME.Background
+        Frame.BorderSizePixel = 0
+        Frame.Active = true
+        Frame.Parent = PickerModalScreen
+
+        local fCorner = Instance.new("UICorner")
+        fCorner.CornerRadius = UDim.new(0, 10)
+        fCorner.Parent = Frame
+
+        local fStroke = Instance.new("UIStroke")
+        fStroke.Color = THEME.Border
+        fStroke.Thickness = 2
+        fStroke.Parent = Frame
+
+        local Title = Instance.new("TextLabel")
+        Title.Size = UDim2.new(1, -60, 0, 35)
+        Title.Position = UDim2.new(0, 12, 0, 10)
+        Title.Text = "🔍 " .. labelText
+        Title.TextColor3 = THEME.AccentLight
+        Title.Font = Enum.Font.GothamBlack
+        Title.TextSize = 22
+        Title.TextXAlignment = Enum.TextXAlignment.Left
+        Title.BackgroundTransparency = 1
+        Title.Parent = Frame
+        applyTextStroke(Title)
+
+        local CloseModalBtn = Instance.new("TextButton")
+        CloseModalBtn.Size = UDim2.fromOffset(36, 36)
+        CloseModalBtn.Position = UDim2.new(1, -42, 0, 8)
+        CloseModalBtn.Text = "X"
+        CloseModalBtn.TextColor3 = THEME.Danger
+        CloseModalBtn.Font = Enum.Font.GothamBlack
+        CloseModalBtn.TextSize = 22
+        CloseModalBtn.BackgroundTransparency = 1
+        CloseModalBtn.Parent = Frame
+        CloseModalBtn.MouseButton1Click:Connect(closeActiveModalPicker)
+
+        local SearchBox = Instance.new("TextBox")
+        SearchBox.Size = UDim2.new(1, -24, 0, 40)
+        SearchBox.Position = UDim2.new(0, 12, 0, 52)
+        SearchBox.BackgroundColor3 = THEME.Sidebar
+        SearchBox.PlaceholderText = "Escribe para buscar..."
+        SearchBox.PlaceholderColor3 = THEME.SubText
+        SearchBox.Text = ""
+        SearchBox.TextColor3 = THEME.Text
+        SearchBox.Font = Enum.Font.GothamBold
+        SearchBox.TextSize = 17
+        SearchBox.Parent = Frame
+
+        local sbCorner = Instance.new("UICorner")
+        sbCorner.CornerRadius = UDim.new(0, 6)
+        sbCorner.Parent = SearchBox
+
+        local Scroll = Instance.new("ScrollingFrame")
+        Scroll.Size = UDim2.new(1, -24, 1, -165)
+        Scroll.Position = UDim2.new(0, 12, 0, 100)
+        Scroll.BackgroundTransparency = 1
+        Scroll.BorderSizePixel = 0
+        Scroll.ScrollBarThickness = 6
+        Scroll.ScrollBarImageColor3 = THEME.AccentLight
+        Scroll.Parent = Frame
+
+        local ListLayout = Instance.new("UIListLayout")
+        ListLayout.Padding = UDim.new(0, 4)
+        ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        ListLayout.Parent = Scroll
+
+        local itemButtons = {}
+
+        local function updateStyles()
+            for _, b in ipairs(itemButtons) do
+                if b.Name == selectedValue then
+                    b.BackgroundColor3 = THEME.SoftPurple
+                    b.TextColor3 = THEME.TextDark
+                else
+                    b.BackgroundColor3 = THEME.CardBg
+                    b.TextColor3 = THEME.Text
+                end
+            end
+        end
+
+        local function filterList(query)
+            local clean = query:lower()
+            for _, b in ipairs(itemButtons) do
+                b.Visible = (clean == "" or b.Name:lower():find(clean))
+            end
+            Scroll.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 5)
+        end
+
+        SearchBox:GetPropertyChangedSignal("Text"):Connect(function() filterList(SearchBox.Text) end)
+
+        for _, opt in ipairs(options) do
+            local itemBtn = Instance.new("TextButton")
+            itemBtn.Name = tostring(opt)
+            itemBtn.Size = UDim2.new(1, -6, 0, 38)
+            itemBtn.BackgroundColor3 = THEME.CardBg
+            itemBtn.Text = "  " .. tostring(opt)
+            itemBtn.TextColor3 = THEME.Text
+            itemBtn.Font = Enum.Font.GothamMedium
+            itemBtn.TextSize = 17
+            itemBtn.TextXAlignment = Enum.TextXAlignment.Left
+            itemBtn.Parent = Scroll
+
+            local ibCorner = Instance.new("UICorner")
+            ibCorner.CornerRadius = UDim.new(0, 5)
+            ibCorner.Parent = itemBtn
+
+            itemBtn.MouseButton1Click:Connect(function()
+                selectedValue = opt
+                updateStyles()
+                updateText()
+                callback(opt)
+            end)
+
+            table.insert(itemButtons, itemBtn)
+        end
+
+        ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            Scroll.CanvasSize = UDim2.new(0, 0, 0, ListLayout.AbsoluteContentSize.Y + 5)
+        end)
+
+        updateStyles()
+
+        local BtnClear = Instance.new("TextButton")
+        BtnClear.Size = UDim2.fromOffset(130, 42)
+        BtnClear.Position = UDim2.new(0, 12, 1, -50)
+        BtnClear.BackgroundColor3 = THEME.Sidebar
+        BtnClear.Text = "✕ Limpiar"
+        BtnClear.TextColor3 = THEME.Danger
+        BtnClear.Font = Enum.Font.GothamBold
+        BtnClear.TextSize = 17
+        BtnClear.Parent = Frame
+
+        local bcCorner = Instance.new("UICorner")
+        bcCorner.CornerRadius = UDim.new(0, 8)
+        bcCorner.Parent = BtnClear
+
+        BtnClear.MouseButton1Click:Connect(function()
+            selectedValue = ""
+            SearchBox.Text = ""
+            filterList("")
+            updateStyles()
+            updateText()
+            callback("")
+        end)
+
+        local BtnConfirm = Instance.new("TextButton")
+        BtnConfirm.Size = UDim2.new(1, -166, 0, 42)
+        BtnConfirm.Position = UDim2.new(0, 154, 1, -50)
+        BtnConfirm.BackgroundColor3 = THEME.Green
+        BtnConfirm.Text = "✓ Confirmar"
+        BtnConfirm.TextColor3 = THEME.TextDark
+        BtnConfirm.Font = Enum.Font.GothamBold
+        BtnConfirm.TextSize = 18
+        BtnConfirm.Parent = Frame
+
+        local bcfCorner = Instance.new("UICorner")
+        bcfCorner.CornerRadius = UDim.new(0, 8)
+        bcfCorner.Parent = BtnConfirm
+
+        BtnConfirm.MouseButton1Click:Connect(closeActiveModalPicker)
+        PickerModalScreen.Enabled = true
+    end
+
+    ActionBtn.MouseButton1Click:Connect(openPicker)
+
+    return { 
+        GetValue = function() return selectedValue end,
+        SetValue = function(val)
+            selectedValue = val or ""
+            updateText()
+        end
+    }
+end
+
+-- PANTALLA FLOTANTE Y ÍCONO MINIMIZADO (POSICIONES INDEPENDIENTES)
+FloatingScreen = Instance.new("ScreenGui")
+FloatingScreen.Name = "TACOHUB_FloatingUI"
+FloatingScreen.ResetOnSpawn = false
+FloatingScreen.Enabled = false
+FloatingScreen.DisplayOrder = 15
+pcall(function() FloatingScreen.Parent = CoreGui end)
+if not FloatingScreen.Parent then FloatingScreen.Parent = player:WaitForChild("PlayerGui") end
+
+local FloatFrame = Instance.new("Frame")
+FloatFrame.Size = UDim2.fromOffset(340, 280)
+FloatFrame.Position = UDim2.new(0.02, 0, 0.25, 0)
+FloatFrame.BackgroundColor3 = THEME.Background
+FloatFrame.BorderSizePixel = 0
+FloatFrame.ClipsDescendants = true
+FloatFrame.Active = true
+FloatFrame.Parent = FloatingScreen
+
+local FloatCorner = Instance.new("UICorner")
+FloatCorner.CornerRadius = UDim.new(0, 10)
+FloatCorner.Parent = FloatFrame
+
+local FloatStroke = Instance.new("UIStroke")
+FloatStroke.Color = THEME.Border
+FloatStroke.Thickness = 2
+FloatStroke.Parent = FloatFrame
+
+local HeaderBar = Instance.new("Frame")
+HeaderBar.Size = UDim2.new(1, 0, 0, 42)
+HeaderBar.BackgroundColor3 = THEME.Sidebar
+HeaderBar.BorderSizePixel = 0
+HeaderBar.Active = true
+HeaderBar.Parent = FloatFrame
+
+local HeaderBarCorner = Instance.new("UICorner")
+HeaderBarCorner.CornerRadius = UDim.new(0, 10)
+HeaderBarCorner.Parent = HeaderBar
+
+applyDragLogic(HeaderBar, FloatFrame)
+
+local TitleLbl = Instance.new("TextLabel")
+TitleLbl.Size = UDim2.new(1, -125, 1, 0)
+TitleLbl.Position = UDim2.new(0, 10, 0, 0)
+TitleLbl.Text = "🌮 TacoHub [⚪ INACTIVO]"
+TitleLbl.TextColor3 = THEME.Text
+TitleLbl.Font = Enum.Font.GothamBlack
+TitleLbl.TextSize = 15
+TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
+TitleLbl.BackgroundTransparency = 1
+TitleLbl.Parent = HeaderBar
+
+applyTextStroke(TitleLbl)
+
+local ReturnMainBtn = Instance.new("TextButton")
+ReturnMainBtn.Size = UDim2.fromOffset(80, 28)
+ReturnMainBtn.Position = UDim2.new(1, -112, 0.5, -14)
+ReturnMainBtn.Text = "🏠 Volver"
+ReturnMainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ReturnMainBtn.BackgroundColor3 = THEME.Accent
+ReturnMainBtn.Font = Enum.Font.GothamBold
+ReturnMainBtn.TextSize = 13
+ReturnMainBtn.ZIndex = 2
+ReturnMainBtn.Parent = HeaderBar
+
+local rBtnCorner = Instance.new("UICorner")
+rBtnCorner.CornerRadius = UDim.new(0, 6)
+rBtnCorner.Parent = ReturnMainBtn
+
+ReturnMainBtn.MouseButton1Click:Connect(function()
+    FloatingScreen.Enabled = false
+    MainScreen.Enabled = true
+end)
+
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Size = UDim2.fromOffset(30, 42)
+MinimizeBtn.Position = UDim2.new(1, -30, 0, 0)
+MinimizeBtn.Text = "−"
+MinimizeBtn.TextColor3 = THEME.SubText
+MinimizeBtn.Font = Enum.Font.GothamBlack
+MinimizeBtn.TextSize = 20
+MinimizeBtn.BackgroundTransparency = 1
+MinimizeBtn.ZIndex = 2
+MinimizeBtn.Parent = HeaderBar
+
+-- CUADRO MINIMIZADO CON NOMBRE COMPLETO "TacoHub" Y ARRASTRE INDEPENDIENTE
+local MinimizedFrame = Instance.new("Frame")
+MinimizedFrame.Size = UDim2.fromOffset(95, 36)
+MinimizedFrame.Position = UDim2.new(0.02, 0, 0.25, 0)
+MinimizedFrame.BackgroundColor3 = THEME.Sidebar
+MinimizedFrame.BorderSizePixel = 0
+MinimizedFrame.ClipsDescendants = true
+MinimizedFrame.Active = true
+MinimizedFrame.Visible = false
+MinimizedFrame.Parent = FloatingScreen
+
+local minFrameCorner = Instance.new("UICorner")
+minFrameCorner.CornerRadius = UDim.new(0, 8)
+minFrameCorner.Parent = MinimizedFrame
+
+local minFrameStroke = Instance.new("UIStroke")
+minFrameStroke.Color = THEME.Border
+minFrameStroke.Thickness = 1.5
+minFrameStroke.Parent = MinimizedFrame
+
+applyDragLogic(MinimizedFrame, MinimizedFrame)
+
+local MinimizedText = Instance.new("TextLabel")
+MinimizedText.Size = UDim2.new(1, -16, 1, 0)
+MinimizedText.Position = UDim2.new(0, 6, 0, 0)
+MinimizedText.BackgroundTransparency = 1
+MinimizedText.Text = "🌮 <b>TacoHub</b>"
+MinimizedText.RichText = true
+MinimizedText.TextColor3 = THEME.Text
+MinimizedText.Font = Enum.Font.GothamBlack
+MinimizedText.TextSize = 13
+MinimizedText.TextXAlignment = Enum.TextXAlignment.Left
+MinimizedText.Parent = MinimizedFrame
+
+local StatusDot = Instance.new("Frame")
+StatusDot.Size = UDim2.fromOffset(8, 8)
+StatusDot.Position = UDim2.new(1, -12, 0.5, -4)
+StatusDot.BackgroundColor3 = THEME.StatusInactive
+StatusDot.BorderSizePixel = 0
+StatusDot.Parent = MinimizedFrame
+
+local dotCorner = Instance.new("UICorner")
+dotCorner.CornerRadius = UDim.new(1, 0)
+dotCorner.Parent = StatusDot
+
+local function setFloatMinimizedState(isMinimized)
+    if isMinimized then
+        FloatFrame.Visible = false
+        MinimizedFrame.Visible = true
+    else
+        MinimizedFrame.Visible = false
+        FloatFrame.Visible = true
+    end
+end
+
+MinimizeBtn.MouseButton1Click:Connect(function() setFloatMinimizedState(true) end)
+
+local isDraggingMin = false
+local dragStartMin = nil
+local startPosMin = nil
+local clickStartTime = 0
+
+table.insert(connectionsToClean, MinimizedFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isDraggingMin = true
+        clickStartTime = tick()
+        dragStartMin = input.Position
+        startPosMin = MinimizedFrame.Position
+    end
+end))
+
+table.insert(connectionsToClean, UserInputService.InputChanged:Connect(function(input)
+    if isDraggingMin and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStartMin
+        MinimizedFrame.Position = UDim2.new(startPosMin.X.Scale, startPosMin.X.Offset + delta.X, startPosMin.Y.Scale, startPosMin.Y.Offset + delta.Y)
+    end
+end))
+
+table.insert(connectionsToClean, UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if isDraggingMin then
+            isDraggingMin = false
+            if tick() - clickStartTime < 0.25 and (input.Position - dragStartMin).Magnitude < 8 then
+                setFloatMinimizedState(false)
+            end
+        end
+    end
+end))
+
+local ScrollFloat = Instance.new("ScrollingFrame")
+ScrollFloat.Size = UDim2.new(1, -12, 1, -48)
+ScrollFloat.Position = UDim2.new(0, 6, 0, 44)
+ScrollFloat.BackgroundTransparency = 1
+ScrollFloat.BorderSizePixel = 0
+ScrollFloat.ScrollBarThickness = 5
+ScrollFloat.ScrollBarImageColor3 = THEME.AccentLight
+ScrollFloat.Parent = FloatFrame
+
+local FloatList = Instance.new("UIListLayout")
+FloatList.Padding = UDim.new(0, 8)
+FloatList.SortOrder = Enum.SortOrder.LayoutOrder
+FloatList.Parent = ScrollFloat
+
+local CardStatus, LblStatus = createCard(ScrollFloat, "ESTADO GENERAL")
+CardStatus.LayoutOrder = 1
+
+local CardEggs, LblEggs, TitleEggs = createCard(ScrollFloat, "HUEVOS")
+CardEggs.LayoutOrder = 2
+
+-- ICONO RESET EN TARJETA DE HUEVOS (VENTANA FLOTANTE)
+local BtnResetEggFloat = Instance.new("TextButton")
+BtnResetEggFloat.Size = UDim2.fromOffset(26, 24)
+BtnResetEggFloat.Position = UDim2.new(0, 8, 0, 6)
+BtnResetEggFloat.Text = "🔄"
+BtnResetEggFloat.TextColor3 = THEME.Text
+BtnResetEggFloat.Font = Enum.Font.GothamBold
+BtnResetEggFloat.TextSize = 14
+BtnResetEggFloat.BackgroundColor3 = THEME.Sidebar
+BtnResetEggFloat.Parent = CardEggs
+
+local rEggFloatCorner = Instance.new("UICorner")
+rEggFloatCorner.CornerRadius = UDim.new(0, 5)
+rEggFloatCorner.Parent = BtnResetEggFloat
+
+TitleEggs.Position = UDim2.new(0, 38, 0, 6)
+TitleEggs.Size = UDim2.new(1, -46, 0, 28)
+
+local CardShop, LblShop, TitleShop = createCard(ScrollFloat, "TIENDA")
+CardShop.LayoutOrder = 3
+
+local CardVoidFloat, LblVoidFloat, TitleVoidFloat = createCard(ScrollFloat, "AUTO VOID")
+CardVoidFloat.LayoutOrder = 4
+
+-- BOTÓN ACCESO RÁPIDO ON/OFF AUTO VOID (VENTANA FLOTANTE)
+local ToggleVoidFloat = Instance.new("TextButton")
+ToggleVoidFloat.Size = UDim2.fromOffset(48, 24)
+ToggleVoidFloat.Position = UDim2.new(1, -56, 0, 6)
+ToggleVoidFloat.Text = ""
+ToggleVoidFloat.BackgroundColor3 = THEME.Border
+ToggleVoidFloat.Parent = CardVoidFloat
+
+local tvFloatCorner = Instance.new("UICorner")
+tvFloatCorner.CornerRadius = UDim.new(1, 0)
+tvFloatCorner.Parent = ToggleVoidFloat
+
+local CircleVoidFloat = Instance.new("Frame")
+CircleVoidFloat.Size = UDim2.fromOffset(18, 18)
+CircleVoidFloat.Position = UDim2.new(0, 3, 0.5, -9)
+CircleVoidFloat.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+CircleVoidFloat.Parent = ToggleVoidFloat
+
+local cvFloatCorner = Instance.new("UICorner")
+cvFloatCorner.CornerRadius = UDim.new(1, 0)
+cvFloatCorner.Parent = CircleVoidFloat
+
+setFloatVoidToggleVisualState = function(state)
+    TweenService:Create(ToggleVoidFloat, TweenInfo.new(0.2), {BackgroundColor3 = state and THEME.Accent or THEME.Border}):Play()
+    TweenService:Create(CircleVoidFloat, TweenInfo.new(0.2), {Position = state and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)}):Play()
+end
+
+ToggleVoidFloat.MouseButton1Click:Connect(function()
+    local newState = not getgenv().AutoVoidActive
+    if setAutoVoidLogic then
+        local allowed = setAutoVoidLogic(newState)
+        if allowed ~= false and setAutoVoidToggleState then
+            setAutoVoidToggleState(newState)
+        end
+    end
+end)
+
+-- FUNCIONES DE RESETEO DE HUEVOS
+local function resetEggStats()
+    petsInventoryTrack = {}
+    totalPetsCount = 0
+    if updateEggUI then updateEggUI() end
+end
+
+BtnResetEggFloat.MouseButton1Click:Connect(resetEggStats)
+
+-- FUNCIONES DE ACTUALIZACIÓN DE INTERFAZ
+local function buildEggString()
+    local lines = { string.format("★ Total Mascotas: %s", formatNumber(totalPetsCount)) }
+    if tick() - lastSuccessfulHatchTime > 30 then
+        table.insert(lines, "⚠️ Sin compras recientes")
+    else
+        table.insert(lines, "🟢 Estado: Funcionando fluidamente")
+    end
+
+    local itemsList = {}
+    for name, count in pairs(petsInventoryTrack) do
+        local nameLower = name:lower()
+        if nameLower:find("olympic") or nameLower:find("secret") then
+            table.insert(itemsList, string.format("• <font color=\"#FF66FF\"><b>%s</b></font>: <font color=\"#FFDC00\">x%s</font>", name, formatNumber(count)))
+        else
+            table.insert(itemsList, string.format("• %s: x%s", name, formatNumber(count)))
+        end
+    end
+
+    table.sort(itemsList)
+    for _, str in ipairs(itemsList) do table.insert(lines, str) end
+    return table.concat(lines, "\n")
+end
+
+local function buildMerchantString()
+    local textList = {}
+    for itemName, count in pairs(purchasedMerchantItems) do
+        table.insert(textList, string.format("• %s: x%s", itemName, formatNumber(count)))
+    end
+
+    if #textList > 0 then
+        table.sort(textList)
+        return table.concat(textList, "\n")
+    else
+        return "Ningún ítem comprado aún."
+    end
+end
+
+local function buildVoidString()
+    return string.format("• Reclamadas: %s\n• Enviadas al Void: %s", formatNumber(voidClaimedCount), formatNumber(voidSentCount))
+end
+
+local function updateOverlayUI()
+    if not isScriptRunning then return end
+    
+    local activeTasks = {}
+    if getgenv().AutoHatchActive == true then table.insert(activeTasks, "auto huevos") end
+    if getgenv().AutoBuyActive == true then table.insert(activeTasks, "auto tiendas") end
+    if getgenv().AutoVoidActive == true then table.insert(activeTasks, "auto void") end
+
+    local statusHeader = ""
+    if #activeTasks > 0 then
+        local tasksFormatted = table.concat(activeTasks, ", ")
+        TitleLbl.Text = "🌮 TacoHub [🟢 ACTIVO]"
+        TitleLbl.TextColor3 = THEME.StatusActive
+        statusHeader = "🟢 ACTIVO | " .. tasksFormatted
+        StatusDot.BackgroundColor3 = THEME.StatusActive
+    else
+        TitleLbl.Text = "🌮 TacoHub [⚪ INACTIVO]"
+        TitleLbl.TextColor3 = THEME.Text
+        statusHeader = "⚪ INACTIVO"
+        StatusDot.BackgroundColor3 = THEME.StatusInactive
+    end
+
+    local afkLine = "🛡️ Anti-AFK: <font color=\"#46DC5A\"><b>Activo</b></font>"
+    LblStatus.Text = statusHeader .. "\n" .. afkLine
+    CardStatus.Size = UDim2.new(1, 0, 0, 75)
+
+    local selectedEggDisplay = (selectedEggValue ~= "") and (" <font color=\"#FFDC00\">[" .. selectedEggValue .. "]</font>") or " <font color=\"#AAAAAA\">[Ninguno]</font>"
+    TitleEggs.Text = "HUEVOS" .. selectedEggDisplay
+
+    local eggText = buildEggString()
+    LblEggs.Text = eggText
+    CardEggs.Size = UDim2.new(1, 0, 0, math.max(75, #eggText:split("\n") * 22 + 35))
+
+    local selectedShopDisplay = (selectedMerchantValue ~= "") and (" <font color=\"#FFDC00\">[" .. selectedMerchantValue .. "]</font>") or " <font color=\"#AAAAAA\">[Ninguna]</font>"
+    TitleShop.Text = "TIENDA" .. selectedShopDisplay
+
+    local restockStr = ""
+    if merchantTimerEndTime then
+        local remaining = merchantTimerEndTime - tick()
+        if remaining > 0 then
+            restockStr = "⏱️ Próximo Restock en: " .. formatTime(remaining)
+        else
+            restockStr = "⏱️ ¡Tiempo cumplido! Esperando actualización..."
+        end
+    else
+        restockStr = "⏱️ Temporizador iniciará con la última compra."
+    end
+
+    local shopItemsStr = buildMerchantString()
+    local combinedShopText = restockStr .. "\n\n" .. shopItemsStr
+    LblShop.Text = combinedShopText
+    CardShop.Size = UDim2.new(1, 0, 0, math.max(85, #combinedShopText:split("\n") * 22 + 35))
+
+    local voidText = buildVoidString()
+    LblVoidFloat.Text = voidText
+    CardVoidFloat.Size = UDim2.new(1, 0, 0, math.max(75, #voidText:split("\n") * 22 + 35))
+
+    if updateMerchantSummaryUI then updateMerchantSummaryUI() end
+    if updateVoidUI then updateVoidUI() end
+
+    ScrollFloat.CanvasSize = UDim2.new(0, 0, 0, FloatList.AbsoluteContentSize.Y + 12)
+end
+
+local function getSelectedMerchantItemsCount()
+    local count = 0
+    for _, isSelected in pairs(selectedMerchantItems) do
+        if isSelected then count = count + 1 end
+    end
+    return count
+end
+
+-- PESTAÑA: HUEVOS
+createSectionHeader(TabHuevos, "Configura la apertura de huevos")
+
+local purchaseRemote = ReplicatedStorage.Packages.Knit.Services.EggService.RF.purchaseEgg
+
+local function handleHatchLogic(value)
+    if value then
+        if not selectedEggValue or selectedEggValue == "" then
+            showAlert("⚠️ Huevo no seleccionado", "Por favor selecciona un huevo antes de activar el Auto Hatch.")
+            return false
+        end
+    end
+
+    hatchSessionToken = hatchSessionToken + 1
+    local currentToken = hatchSessionToken
+    getgenv().AutoHatchActive = value
+
+    updateOverlayUI()
+
+    if value then
+        lastSuccessfulHatchTime = tick()
+        task.spawn(function()
+            while getgenv().AutoHatchActive and isScriptRunning and currentToken == hatchSessionToken do
+                local selectedEgg = selectedEggValue
+                if selectedEgg and selectedEgg ~= "" then
+                    local args = {selectedEgg, nil, nil, false, nil, true}
+                    local success, result = pcall(function()
+                        return purchaseRemote:InvokeServer(unpack(args))
+                    end)
+
+                    if currentToken == hatchSessionToken and isScriptRunning then
+                        if success and typeof(result) == "table" and #result > 0 then
+                            local petsAddedThisCycle = 0
+                            for _, petData in pairs(result) do
+                                local name = (typeof(petData) == "table" and (petData.Name or petData.Pet)) or tostring(petData)
+                                if name and name ~= "" then
+                                    petsInventoryTrack[name] = (petsInventoryTrack[name] or 0) + 1
+                                    totalPetsCount = totalPetsCount + 1
+                                    petsAddedThisCycle = petsAddedThisCycle + 1
+                                end
+                            end
+
+                            if petsAddedThisCycle > 0 then 
+                                lastSuccessfulHatchTime = tick()
+                                updateEggUI()
+                            end
+                        end
+                    end
+                else
+                    task.wait(0.2)
+                end
+                task.wait()
+            end
+        end)
+    end
+    return true
+end
+
+local AutoHatchToggle
+AutoHatchToggle, setAutoHatchToggleState, setAutoHatchLogic = createToggle(TabHuevos, "Activar auto hatch", false, handleHatchLogic)
+
+local AmountDropdown = createCustomDropdown(TabHuevos, "Cantidad apertura", "Seleccionar cantidad", {"50x"}, "50x", function(val)
+    selectedAmountValue = val or "50x"
+end)
+
+local cleanEggList = getEggNames()
+local EggDropdown = createCustomDropdown(TabHuevos, "Huevo activo", "Seleccionar huevo", cleanEggList, "", function(val)
+    selectedEggValue = val
+    updateOverlayUI()
+end)
+
+-- CONTROLES DE CONFIGURACIÓN PERSISTENTE (HUEVOS)
+local ConfigContainer = Instance.new("Frame")
+ConfigContainer.Size = UDim2.new(1, 0, 0, 52)
+ConfigContainer.BackgroundTransparency = 1
+ConfigContainer.Parent = TabHuevos
+
+local BtnSaveEggConfig = Instance.new("TextButton")
+BtnSaveEggConfig.Size = UDim2.new(0.68, -5, 1, 0)
+BtnSaveEggConfig.Position = UDim2.new(0, 0, 0, 0)
+BtnSaveEggConfig.BackgroundColor3 = THEME.Accent
+BtnSaveEggConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnSaveEggConfig.Font = Enum.Font.GothamBold
+BtnSaveEggConfig.TextSize = 14
+BtnSaveEggConfig.TextWrapped = true
+BtnSaveEggConfig.Parent = ConfigContainer
+
+local saveCorner = Instance.new("UICorner")
+saveCorner.CornerRadius = UDim.new(0, 8)
+saveCorner.Parent = BtnSaveEggConfig
+
+local BtnClearEggConfig = Instance.new("TextButton")
+BtnClearEggConfig.Size = UDim2.new(0.32, -5, 1, 0)
+BtnClearEggConfig.Position = UDim2.new(0.68, 5, 0, 0)
+BtnClearEggConfig.BackgroundColor3 = THEME.Danger
+BtnClearEggConfig.Text = "🗑 Limpiar"
+BtnClearEggConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnClearEggConfig.Font = Enum.Font.GothamBold
+BtnClearEggConfig.TextSize = 15
+BtnClearEggConfig.Parent = ConfigContainer
+
+local clearCorner = Instance.new("UICorner")
+clearCorner.CornerRadius = UDim.new(0, 8)
+clearCorner.Parent = BtnClearEggConfig
+
+local function refreshSavedConfigBtnText()
+    if savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
+        BtnSaveEggConfig.Text = string.format("💾 Guardar Conf: [%s - %s]", savedEggConfig.Egg, savedEggConfig.Amount or "50x")
+    else
+        BtnSaveEggConfig.Text = "💾 Guardar configuración de huevo"
+    end
+end
+refreshSavedConfigBtnText()
+
+BtnSaveEggConfig.MouseButton1Click:Connect(function()
+    if not selectedEggValue or selectedEggValue == "" then
+        showAlert("⚠️ Huevo no seleccionado", "Selecciona un huevo primero para poder guardar la configuración.")
+        return
+    end
+    savedEggConfig.Egg = selectedEggValue
+    savedEggConfig.Amount = selectedAmountValue or "50x"
+    saveEggConfigToFile()
+    refreshSavedConfigBtnText()
+    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente:\nHuevo: %s\nApertura: %s", savedEggConfig.Egg, savedEggConfig.Amount))
+end)
+
+BtnClearEggConfig.MouseButton1Click:Connect(function()
+    savedEggConfig.Egg = ""
+    savedEggConfig.Amount = "50x"
+    saveEggConfigToFile()
+    refreshSavedConfigBtnText()
+    showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada.")
+end)
+
+local AutoStartToggle, setAutoStartToggleState = createToggle(TabHuevos, "Activar última configuración guardada", savedEggConfig.AutoStart, function(enabled)
+    savedEggConfig.AutoStart = enabled
+    saveEggConfigToFile()
+    return true
+end)
+
+local CardEggStats, LblEggStats, TitleEggStats = createCard(TabHuevos, "Mascotas Obtenidas")
+
+-- ICONO RESET EN TARJETA DE HUEVOS (VENTANA PRINCIPAL)
+local BtnResetEggMain = Instance.new("TextButton")
+BtnResetEggMain.Size = UDim2.fromOffset(28, 26)
+BtnResetEggMain.Position = UDim2.new(0, 8, 0, 5)
+BtnResetEggMain.Text = "🔄"
+BtnResetEggMain.TextColor3 = THEME.Text
+BtnResetEggMain.Font = Enum.Font.GothamBold
+BtnResetEggMain.TextSize = 15
+BtnResetEggMain.BackgroundColor3 = THEME.Sidebar
+BtnResetEggMain.Parent = CardEggStats
+
+local rEggMainCorner = Instance.new("UICorner")
+rEggMainCorner.CornerRadius = UDim.new(0, 5)
+rEggMainCorner.Parent = BtnResetEggMain
+
+TitleEggStats.Position = UDim2.new(0, 42, 0, 6)
+TitleEggStats.Size = UDim2.new(1, -50, 0, 28)
+
+BtnResetEggMain.MouseButton1Click:Connect(resetEggStats)
+
+LblEggStats.Text = "Total Mascotas: 0\nNinguna registrada en la sesión"
+
+updateEggUI = function()
+    LblEggStats.Text = buildEggString()
+    CardEggStats.Size = UDim2.new(1, 0, 0, math.max(85, #LblEggStats.Text:split("\n") * 24 + 40))
+    updateOverlayUI()
+end
+
+-- PESTAÑA: TIENDAS
+createSectionHeader(TabMerchant, "Configura las compras de tienda")
+
+local merchantList, merchantItemsMap, itemDataMap = getAllMerchantItems()
+local merchantRemote = ReplicatedStorage.Packages.Knit.Services.LimitedMerchantService.RF.BuyItem
+
+local ModalFrame = Instance.new("Frame")
+ModalFrame.Size = UDim2.fromOffset(580, 440)
+ModalFrame.Position = UDim2.fromScale(0.5, 0.5)
+ModalFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+ModalFrame.BackgroundColor3 = THEME.Background
+ModalFrame.BorderSizePixel = 0
+ModalFrame.Active = true
+ModalFrame.Parent = ModalScreen
+
+local ModalCorner = Instance.new("UICorner")
+ModalCorner.CornerRadius = UDim.new(0, 10)
+ModalCorner.Parent = ModalFrame
+
+local ModalStroke = Instance.new("UIStroke")
+ModalStroke.Color = THEME.Border
+ModalStroke.Thickness = 2
+ModalStroke.Parent = ModalFrame
+
+local ModalTitle = Instance.new("TextLabel")
+ModalTitle.Size = UDim2.new(1, -90, 0, 42)
+ModalTitle.Position = UDim2.new(0, 15, 0, 5)
+ModalTitle.Text = "Selección de Ítems Disponibles"
+ModalTitle.TextColor3 = THEME.Text
+ModalTitle.Font = Enum.Font.GothamBlack
+ModalTitle.TextSize = 21
+ModalTitle.TextXAlignment = Enum.TextXAlignment.Left
+ModalTitle.BackgroundTransparency = 1
+ModalTitle.Parent = ModalFrame
+applyTextStroke(ModalTitle)
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.fromOffset(40, 40)
+CloseBtn.Position = UDim2.new(1, -45, 0, 6)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = THEME.Danger
+CloseBtn.Font = Enum.Font.GothamBlack
+CloseBtn.TextSize = 22
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Parent = ModalFrame
+CloseBtn.MouseButton1Click:Connect(function() ModalScreen.Enabled = false end)
+
+local ModalScroll = Instance.new("ScrollingFrame")
+ModalScroll.Size = UDim2.new(1, -20, 1, -115)
+ModalScroll.Position = UDim2.new(0, 10, 0, 50)
+ModalScroll.BackgroundTransparency = 1
+ModalScroll.BorderSizePixel = 0
+ModalScroll.ScrollBarThickness = 6
+ModalScroll.ScrollBarImageColor3 = THEME.AccentLight
+ModalScroll.Parent = ModalFrame
+
+local ModalGrid = Instance.new("UIGridLayout")
+ModalGrid.CellSize = UDim2.new(0, 175, 0, 75)
+ModalGrid.CellPadding = UDim2.new(0, 10, 0, 10)
+ModalGrid.SortOrder = Enum.SortOrder.LayoutOrder
+ModalGrid.Parent = ModalScroll
+
+local ConfirmModalBtn = Instance.new("TextButton")
+ConfirmModalBtn.Size = UDim2.new(1, -20, 0, 46)
+ConfirmModalBtn.Position = UDim2.new(0, 10, 1, -54)
+ConfirmModalBtn.BackgroundColor3 = THEME.Green
+ConfirmModalBtn.Text = "✓ Confirmar Selección"
+ConfirmModalBtn.TextColor3 = THEME.TextDark
+ConfirmModalBtn.Font = Enum.Font.GothamBold
+ConfirmModalBtn.TextSize = 19
+ConfirmModalBtn.Parent = ModalFrame
+
+local confirmCorner = Instance.new("UICorner")
+confirmCorner.CornerRadius = UDim.new(0, 8)
+confirmCorner.Parent = ConfirmModalBtn
+
+ConfirmModalBtn.MouseButton1Click:Connect(function() ModalScreen.Enabled = false end)
+
+local SelectItemsBtn
+local updateSelectItemsBtnText
+
+updateSelectItemsBtnText = function()
+    if not SelectItemsBtn then return end
+    if not selectedMerchantValue or selectedMerchantValue == "" then
+        SelectItemsBtn.Text = "📦 Seleccionar items <font color=\"#AAAAAA\">[Ninguna Tienda]</font>"
+    else
+        local count = getSelectedMerchantItemsCount()
+        if count > 0 then
+            SelectItemsBtn.Text = string.format("📦 Seleccionar items [%s] (<font color=\"#FFDC00\"><b>%d seleccionados</b></font>)", selectedMerchantValue, count)
+        else
+            SelectItemsBtn.Text = string.format("📦 Seleccionar items [%s] (<font color=\"#AAAAAA\">Sin seleccionados</font>)", selectedMerchantValue)
+        end
+    end
+end
+
+local populateGridItems = function(merchantName)
+    for _, child in ipairs(ModalScroll:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+
+    if not merchantName or merchantName == "" then return end
+
+    local items = merchantItemsMap[merchantName] or {}
+    for _, itemName in ipairs(items) do
+        local btn = Instance.new("TextButton")
+        btn.Name = itemName
+        btn.Text = itemName
+        btn.Size = UDim2.new(0, 175, 0, 75)
+        btn.Font = Enum.Font.GothamMedium
+        btn.TextSize = 16
+        btn.TextWrapped = true
+        btn.Parent = ModalScroll
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = btn
+
+        local function applyStyle()
+            if selectedMerchantItems[itemName] then
+                btn.BackgroundColor3 = THEME.SoftPurple
+                btn.TextColor3 = THEME.TextDark
+            else
+                btn.BackgroundColor3 = THEME.CardBg
+                btn.TextColor3 = THEME.Text
+            end
+        end
+        applyStyle()
+
+        btn.MouseButton1Click:Connect(function()
+            selectedMerchantItems[itemName] = not selectedMerchantItems[itemName]
+            applyStyle()
+            updateSelectItemsBtnText()
+        end)
+    end
+
+    ModalScroll.CanvasSize = UDim2.new(0, 0, 0, ModalGrid.AbsoluteContentSize.Y + 12)
+end
+
+local CardStatusBuy, LblStatusBuy
+
+startAutoBuyLogic = function(enabled)
+    if enabled then
+        if not selectedMerchantValue or selectedMerchantValue == "" then
+            showAlert("⚠️ Tienda no seleccionada", "Por favor selecciona una tienda antes de activar la Auto Compra.")
+            return false
+        end
+
+        if getSelectedMerchantItemsCount() == 0 then
+            showAlert("⚠️ Sin ítems seleccionados", "Debes seleccionar al menos 1 ítem del menú de la tienda antes de activar la Auto Compra.")
+            return false
+        end
+    end
+
+    buySessionToken = buySessionToken + 1
+    local currentToken = buySessionToken
+    getgenv().AutoBuyActive = enabled
+
+    updateOverlayUI()
+
+    if enabled then
+        LblStatusBuy.Text = "Iniciando bucle de auto-compra..."
+        
+        task.spawn(function()
+            while getgenv().AutoBuyActive and isScriptRunning and currentToken == buySessionToken do
+                local liveData = getLiveStockData()
+                local purchasesMade = false
+                
+                for itemName, isSelected in pairs(selectedMerchantItems) do
+                    if isSelected then
+                        local infoKey = (selectedMerchantValue or "") .. ":" .. itemName
+                        local info = itemDataMap[infoKey]
+                        
+                        if info then
+                            local merchantName = info.merchant
+                            local slot = info.slot
+                            local merchantSlotKey = merchantName .. ":" .. tostring(slot)
+                            local liveInfo = liveData[merchantSlotKey]
+                            
+                            if liveInfo and liveInfo.stock and liveInfo.stock > 0 then
+                                local itemTitle = info.raw.Title
+                                if itemTitle == liveInfo.title then
+                                    LblStatusBuy.Text = "Intentando comprar: [" .. merchantName .. "] " .. itemTitle
+                                    
+                                    local success, result = pcall(function()
+                                        return merchantRemote:InvokeServer(merchantName, slot)
+                                    end)
+                                    
+                                    if success then
+                                        LblStatusBuy.Text = "🟢 Comprado con éxito: [" .. merchantName .. "] " .. itemTitle
+                                        purchasedMerchantItems[itemTitle] = (purchasedMerchantItems[itemTitle] or 0) + 1
+                                        totalMerchantPurchasesCount = totalMerchantPurchasesCount + 1
+                                        purchasesMade = true
+
+                                        merchantTimerEndTime = tick() + 1190
+                                        updateOverlayUI()
+                                    else
+                                        LblStatusBuy.Text = "🔴 Error al comprar: " .. tostring(result)
+                                    end
+                                    task.wait(0.2)
+                                end
+                            end
+                        end
+                    end
+                end
+                
+                if not purchasesMade and currentToken == buySessionToken then
+                    LblStatusBuy.Text = "Buscando ítems en tienda...\nÚltima revisión: " .. os.date("%X")
+                end
+                
+                task.wait(1.5)
+            end
+            if currentToken == buySessionToken then LblStatusBuy.Text = "Auto compra desactivada." end
+        end)
+    else
+        LblStatusBuy.Text = "Auto compra desactivada."
+    end
+    return true
+end
+
+local AutoBuyToggle
+AutoBuyToggle, setAutoBuyToggleState = createToggle(TabMerchant, "Activar auto compra", false, startAutoBuyLogic)
+
+MerchantDropdown = createCustomDropdown(TabMerchant, "Tienda activa", "Seleccionar tienda", merchantList, "", function(val)
+    selectedMerchantValue = val
+    selectedMerchantItems = {}
+    updateSelectItemsBtnText()
+    populateGridItems(val)
+    updateOverlayUI()
+end)
+
+SelectItemsBtn = Instance.new("TextButton")
+SelectItemsBtn.Size = UDim2.new(1, 0, 0, 52)
+SelectItemsBtn.BackgroundColor3 = THEME.Sidebar
+SelectItemsBtn.Text = "📦 Seleccionar items <font color=\"#AAAAAA\">[Ninguna Tienda]</font>"
+SelectItemsBtn.RichText = true
+SelectItemsBtn.TextColor3 = THEME.Text
+SelectItemsBtn.Font = Enum.Font.GothamMedium
+SelectItemsBtn.TextSize = 17
+SelectItemsBtn.BorderSizePixel = 0
+SelectItemsBtn.TextWrapped = true
+SelectItemsBtn.Parent = TabMerchant
+
+local sibCorner = Instance.new("UICorner")
+sibCorner.CornerRadius = UDim.new(0, 8)
+sibCorner.Parent = SelectItemsBtn
+
+SelectItemsBtn.MouseButton1Click:Connect(function()
+    if selectedMerchantValue and selectedMerchantValue ~= "" then
+        ModalTitle.Text = "Ítems: " .. tostring(selectedMerchantValue)
+        populateGridItems(selectedMerchantValue)
+        ModalScreen.Enabled = true
+    else
+        showAlert("⚠️ Sin Tienda Activa", "Selecciona primero una tienda activa para explorar sus ítems.")
+    end
+end)
+
+-- CONTROLES DE CONFIGURACIÓN PERSISTENTE (TIENDAS)
+local ShopConfigContainer = Instance.new("Frame")
+ShopConfigContainer.Size = UDim2.new(1, 0, 0, 52)
+ShopConfigContainer.BackgroundTransparency = 1
+ShopConfigContainer.Parent = TabMerchant
+
+local BtnSaveShopConfig = Instance.new("TextButton")
+BtnSaveShopConfig.Size = UDim2.new(0.68, -5, 1, 0)
+BtnSaveShopConfig.Position = UDim2.new(0, 0, 0, 0)
+BtnSaveShopConfig.BackgroundColor3 = THEME.Accent
+BtnSaveShopConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnSaveShopConfig.Font = Enum.Font.GothamBold
+BtnSaveShopConfig.TextSize = 14
+BtnSaveShopConfig.TextWrapped = true
+BtnSaveShopConfig.Parent = ShopConfigContainer
+
+local saveShopCorner = Instance.new("UICorner")
+saveShopCorner.CornerRadius = UDim.new(0, 8)
+saveShopCorner.Parent = BtnSaveShopConfig
+
+local BtnClearShopConfig = Instance.new("TextButton")
+BtnClearShopConfig.Size = UDim2.new(0.32, -5, 1, 0)
+BtnClearShopConfig.Position = UDim2.new(0.68, 5, 0, 0)
+BtnClearShopConfig.BackgroundColor3 = THEME.Danger
+BtnClearShopConfig.Text = "🗑 Limpiar"
+BtnClearShopConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
+BtnClearShopConfig.Font = Enum.Font.GothamBold
+BtnClearShopConfig.TextSize = 15
+BtnClearShopConfig.Parent = ShopConfigContainer
+
+local clearShopCorner = Instance.new("UICorner")
+clearShopCorner.CornerRadius = UDim.new(0, 8)
+clearShopCorner.Parent = BtnClearShopConfig
+
+local function refreshSavedShopConfigBtnText()
+    local savedItemsList = {}
+    if typeof(savedShopConfig.Items) == "table" then
+        for item, active in pairs(savedShopConfig.Items) do
+            if active then table.insert(savedItemsList, item) end
+        end
+    end
+
+    if savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
+        BtnSaveShopConfig.Text = string.format("💾 Guardar Conf: [%s - %d Ítems]", savedShopConfig.Merchant, #savedItemsList)
+    else
+        BtnSaveShopConfig.Text = "💾 Guardar configuración de tienda"
+    end
+end
+refreshSavedShopConfigBtnText()
+
+BtnSaveShopConfig.MouseButton1Click:Connect(function()
+    if not selectedMerchantValue or selectedMerchantValue == "" then
+        showAlert("⚠️ Tienda no seleccionada", "Selecciona una tienda primero para poder guardar la configuración.")
+        return
+    end
+
+    local count = getSelectedMerchantItemsCount()
+    if count == 0 then
+        showAlert("⚠️ Ítems no seleccionados", "Selecciona al menos 1 ítem de la tienda para guardar la configuración.")
+        return
+    end
+
+    savedShopConfig.Merchant = selectedMerchantValue
+    savedShopConfig.Items = {}
+    for item, active in pairs(selectedMerchantItems) do
+        if active then savedShopConfig.Items[item] = true end
+    end
+
+    saveShopConfigToFile()
+    refreshSavedShopConfigBtnText()
+    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente:\nTienda: %s\nÍtems Seleccionados: %d", savedShopConfig.Merchant, count))
+end)
+
+BtnClearShopConfig.MouseButton1Click:Connect(function()
+    savedShopConfig.Merchant = ""
+    savedShopConfig.Items = {}
+    saveShopConfigToFile()
+    refreshSavedShopConfigBtnText()
+    showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada de tienda.")
+end)
+
+local AutoStartShopToggle, setAutoStartShopToggleState = createToggle(TabMerchant, "Activar última configuración guardada", savedShopConfig.AutoStart, function(enabled)
+    savedShopConfig.AutoStart = enabled
+    saveShopConfigToFile()
+    return true
+end)
+
+local CardSummary, LblSummary = createCard(TabMerchant, "Compras realizadas")
+LblSummary.Text = "Ningún ítem comprado aún."
+
+CardStatusBuy, LblStatusBuy = createCard(TabMerchant, "Estado")
+LblStatusBuy.Text = "Esperando inicio..."
+
+local CardTimerMain, LblTimerMain = createCard(TabMerchant, "Restock")
+LblTimerMain.Text = "El temporizador se iniciará con la última compra."
+
+updateMerchantSummaryUI = function()
+    local text = buildMerchantString()
+    LblSummary.Text = text
+    CardSummary.Size = UDim2.new(1, 0, 0, math.max(85, #text:split("\n") * 24 + 40))
+end
+
+-- PESTAÑA: VOID
+local CardVoidStatus, LblVoidStatus
+
+setAutoVoidLogic = function(value)
+    voidSessionToken = voidSessionToken + 1
+    local currentToken = voidSessionToken
+    getgenv().AutoVoidActive = value
+
+    if setFloatVoidToggleVisualState then
+        setFloatVoidToggleVisualState(value)
+    end
+
+    updateOverlayUI()
+
+    if value then
+        LblVoidStatus.Text = "Enviando mascotas Golden y Reclamando..."
+        task.spawn(function()
+            while getgenv().AutoVoidActive and isScriptRunning and currentToken == voidSessionToken do
+                pcall(function()
+                    local voidData = PetVoidService.RF.init:InvokeServer()
+                    if type(voidData) == "table" then
+                        for key, item in pairs(voidData) do
+                            if not getgenv().AutoVoidActive or currentToken ~= voidSessionToken then break end
+                            local guid = (type(item) == "table" and item.Guid) or key
+                            if guid and type(guid) == "string" and #guid == 36 then
+                                onClaim:FireServer(guid)
+                                voidClaimedCount = voidClaimedCount + 1
+                                updateVoidUI()
+                                task.wait(0.1)
+                            end
+                        end
+                    end
+                end)
+
+                pcall(function()
+                    local petData = PetService.RF.getOwned:InvokeServer()
+                    if type(petData) == "table" then
+                        for uuid, data in pairs(petData) do
+                            if not getgenv().AutoVoidActive or currentToken ~= voidSessionToken then break end
+                            if type(uuid) == "string" and #uuid == 36 and type(data) == "table" then
+                                local tier = tostring(data.Tier or ""):lower()
+                                local isLocked = data.Locked == true
+                                if (tier:find("gold") or tier:find("golden")) and not isLocked then
+                                    onCraftToVoid:FireServer(uuid)
+                                    voidSentCount = voidSentCount + 1
+                                    updateVoidUI()
+                                    task.wait(0.2)
+                                end
+                            end
+                        end
+                    end
+                end)
+                task.wait(0.5)
+            end
+            if currentToken == voidSessionToken then LblVoidStatus.Text = "Auto Void desactivado." end
+        end)
+    else
+        LblVoidStatus.Text = "Auto Void desactivado."
+    end
+    return true
+end
+
+local AutoVoidToggle
+AutoVoidToggle, setAutoVoidToggleState = createToggle(TabVoid, "Activar Auto Void & Claim", false, setAutoVoidLogic)
+
+local CardVoidStats, LblVoidStats = createCard(TabVoid, "Estadísticas del Void")
+CardVoidStatus, LblVoidStatus = createCard(TabVoid, "Estado Void")
+LblVoidStatus.Text = "Esperando activación..."
+
+updateVoidUI = function()
+    local text = buildVoidString()
+    LblVoidStats.Text = text
+    CardVoidStats.Size = UDim2.new(1, 0, 0, math.max(85, #text:split("\n") * 24 + 40))
+end
+
+-- PESTAÑA: AFK
+createSectionHeader(TabAFK, "Protección Anti-AFK")
+
+local CardAFKMain, LblAFKMain = createCard(TabAFK, "ESTADO GENERAL")
+LblAFKMain.Text = "Status: AFK Activo"
+LblAFKMain.TextColor3 = THEME.StatusActive
+LblAFKMain.Font = Enum.Font.GothamBlack
+LblAFKMain.TextSize = 20
+CardAFKMain.Size = UDim2.new(1, 0, 0, 70)
+
+-- ACTIVACIÓN FORZADA DE PESTAÑA INICIAL (HUEVOS)
+TabFrames["Huevos"].Visible = true
+TabButtons["Huevos"].BackgroundColor3 = THEME.CardBg
+TabButtons["Huevos"].TextColor3 = THEME.AccentLight
+
+-- AUTO ACTIVACIÓN AUTOMÁTICA HUEVOS (15 SEGUNDOS)
+if savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
+    task.spawn(function()
+        task.wait(15)
+        if isScriptRunning and savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
+            selectedEggValue = savedEggConfig.Egg
+            selectedAmountValue = savedEggConfig.Amount or "50x"
+            
+            EggDropdown.SetValue(savedEggConfig.Egg)
+            AmountDropdown.SetValue(savedEggConfig.Amount or "50x")
+            
+            setAutoHatchToggleState(true)
+            setAutoHatchLogic(true)
+        end
+    end)
+end
+
+-- AUTO ACTIVACIÓN AUTOMÁTICA TIENDAS (20 SEGUNDOS)
+if savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
+    task.spawn(function()
+        task.wait(20)
+        if isScriptRunning and savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
+            selectedMerchantValue = savedShopConfig.Merchant
+            selectedMerchantItems = {}
+            if typeof(savedShopConfig.Items) == "table" then
+                for item, active in pairs(savedShopConfig.Items) do
+                    if active then selectedMerchantItems[item] = true end
+                end
+            end
+            
+            MerchantDropdown.SetValue(savedShopConfig.Merchant)
+            updateSelectItemsBtnText()
+            populateGridItems(savedShopConfig.Merchant)
+            
+            setAutoBuyToggleState(true)
+            startAutoBuyLogic(true)
+        end
+    end)
+end
+
+-- BUCLE TEMPORIZADOR AISLADO Y ULTRA-LIGERO
+task.spawn(function()
+    while isScriptRunning do
+        if merchantTimerEndTime then
+            local remaining = merchantTimerEndTime - tick()
+            if remaining > 0 then
+                LblTimerMain.Text = "⏱️ Próximo Restock en: " .. formatTime(remaining)
+            else
+                LblTimerMain.Text = "⏱️ ¡Tiempo de Restock cumplido!"
+            end
+        end
+        task.wait(1)
+    end
+end)
