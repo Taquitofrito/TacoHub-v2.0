@@ -1,4 +1,4 @@
--- TacoHub v2.6 (Versión Optimizada - Posiciones Independientes & UI & Anti-AFK Integrado)
+-- TacoHub v2.6 (Versión Optimizada - Posiciones Independientes & UI & Anti-AFK Integrado) --
 -- =================================================================
 
 if getgenv().TacoHubLoaded and getgenv().TacoHubUnload then
@@ -346,7 +346,6 @@ end
 local MainScreen, FloatingScreen
 local updateMerchantSummaryUI, updateVoidUI, closeActiveModalPicker, updateEggUI
 local setAutoHatchToggleState, setAutoHatchLogic, MerchantDropdown, setAutoBuyToggleState, startAutoBuyLogic
-local setAutoVoidToggleState, setAutoVoidLogic, setFloatVoidToggleVisualState
 
 -- MODAL ALERTA
 local AlertScreen = Instance.new("ScreenGui")
@@ -1257,75 +1256,11 @@ CardStatus.LayoutOrder = 1
 local CardEggs, LblEggs, TitleEggs = createCard(ScrollFloat, "HUEVOS")
 CardEggs.LayoutOrder = 2
 
--- ICONO RESET EN TARJETA DE HUEVOS (VENTANA FLOTANTE)
-local BtnResetEggFloat = Instance.new("TextButton")
-BtnResetEggFloat.Size = UDim2.fromOffset(26, 24)
-BtnResetEggFloat.Position = UDim2.new(0, 8, 0, 6)
-BtnResetEggFloat.Text = "🔄"
-BtnResetEggFloat.TextColor3 = THEME.Text
-BtnResetEggFloat.Font = Enum.Font.GothamBold
-BtnResetEggFloat.TextSize = 14
-BtnResetEggFloat.BackgroundColor3 = THEME.Sidebar
-BtnResetEggFloat.Parent = CardEggs
-
-local rEggFloatCorner = Instance.new("UICorner")
-rEggFloatCorner.CornerRadius = UDim.new(0, 5)
-rEggFloatCorner.Parent = BtnResetEggFloat
-
-TitleEggs.Position = UDim2.new(0, 38, 0, 6)
-TitleEggs.Size = UDim2.new(1, -46, 0, 28)
-
 local CardShop, LblShop, TitleShop = createCard(ScrollFloat, "TIENDA")
 CardShop.LayoutOrder = 3
 
-local CardVoidFloat, LblVoidFloat, TitleVoidFloat = createCard(ScrollFloat, "AUTO VOID")
+local CardVoidFloat, LblVoidFloat = createCard(ScrollFloat, "AUTO VOID")
 CardVoidFloat.LayoutOrder = 4
-
--- BOTÓN ACCESO RÁPIDO ON/OFF AUTO VOID (VENTANA FLOTANTE)
-local ToggleVoidFloat = Instance.new("TextButton")
-ToggleVoidFloat.Size = UDim2.fromOffset(48, 24)
-ToggleVoidFloat.Position = UDim2.new(1, -56, 0, 6)
-ToggleVoidFloat.Text = ""
-ToggleVoidFloat.BackgroundColor3 = THEME.Border
-ToggleVoidFloat.Parent = CardVoidFloat
-
-local tvFloatCorner = Instance.new("UICorner")
-tvFloatCorner.CornerRadius = UDim.new(1, 0)
-tvFloatCorner.Parent = ToggleVoidFloat
-
-local CircleVoidFloat = Instance.new("Frame")
-CircleVoidFloat.Size = UDim2.fromOffset(18, 18)
-CircleVoidFloat.Position = UDim2.new(0, 3, 0.5, -9)
-CircleVoidFloat.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-CircleVoidFloat.Parent = ToggleVoidFloat
-
-local cvFloatCorner = Instance.new("UICorner")
-cvFloatCorner.CornerRadius = UDim.new(1, 0)
-cvFloatCorner.Parent = CircleVoidFloat
-
-setFloatVoidToggleVisualState = function(state)
-    TweenService:Create(ToggleVoidFloat, TweenInfo.new(0.2), {BackgroundColor3 = state and THEME.Accent or THEME.Border}):Play()
-    TweenService:Create(CircleVoidFloat, TweenInfo.new(0.2), {Position = state and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)}):Play()
-end
-
-ToggleVoidFloat.MouseButton1Click:Connect(function()
-    local newState = not getgenv().AutoVoidActive
-    if setAutoVoidLogic then
-        local allowed = setAutoVoidLogic(newState)
-        if allowed ~= false and setAutoVoidToggleState then
-            setAutoVoidToggleState(newState)
-        end
-    end
-end)
-
--- FUNCIONES DE RESETEO DE HUEVOS
-local function resetEggStats()
-    petsInventoryTrack = {}
-    totalPetsCount = 0
-    if updateEggUI then updateEggUI() end
-end
-
-BtnResetEggFloat.MouseButton1Click:Connect(resetEggStats)
 
 -- FUNCIONES DE ACTUALIZACIÓN DE INTERFAZ
 local function buildEggString()
@@ -1391,6 +1326,7 @@ local function updateOverlayUI()
         StatusDot.BackgroundColor3 = THEME.StatusInactive
     end
 
+    -- Integración del Anti-AFK directamente dentro de la tarjeta Estado General
     local afkLine = "🛡️ Anti-AFK: <font color=\"#46DC5A\"><b>Activo</b></font>"
     LblStatus.Text = statusHeader .. "\n" .. afkLine
     CardStatus.Size = UDim2.new(1, 0, 0, 75)
@@ -1580,31 +1516,10 @@ local AutoStartToggle, setAutoStartToggleState = createToggle(TabHuevos, "Activa
     return true
 end)
 
-local CardEggStats, LblEggStats, TitleEggStats = createCard(TabHuevos, "Mascotas Obtenidas")
-
--- ICONO RESET EN TARJETA DE HUEVOS (VENTANA PRINCIPAL)
-local BtnResetEggMain = Instance.new("TextButton")
-BtnResetEggMain.Size = UDim2.fromOffset(28, 26)
-BtnResetEggMain.Position = UDim2.new(0, 8, 0, 5)
-BtnResetEggMain.Text = "🔄"
-BtnResetEggMain.TextColor3 = THEME.Text
-BtnResetEggMain.Font = Enum.Font.GothamBold
-BtnResetEggMain.TextSize = 15
-BtnResetEggMain.BackgroundColor3 = THEME.Sidebar
-BtnResetEggMain.Parent = CardEggStats
-
-local rEggMainCorner = Instance.new("UICorner")
-rEggMainCorner.CornerRadius = UDim.new(0, 5)
-rEggMainCorner.Parent = BtnResetEggMain
-
-TitleEggStats.Position = UDim2.new(0, 42, 0, 6)
-TitleEggStats.Size = UDim2.new(1, -50, 0, 28)
-
-BtnResetEggMain.MouseButton1Click:Connect(resetEggStats)
-
+local CardEggStats, LblEggStats = createCard(TabHuevos, "Mascotas Obtenidas")
 LblEggStats.Text = "Total Mascotas: 0\nNinguna registrada en la sesión"
 
-updateEggUI = function()
+function updateEggUI()
     LblEggStats.Text = buildEggString()
     CardEggStats.Size = UDim2.new(1, 0, 0, math.max(85, #LblEggStats.Text:split("\n") * 24 + 40))
     updateOverlayUI()
@@ -1971,14 +1886,10 @@ end
 -- PESTAÑA: VOID
 local CardVoidStatus, LblVoidStatus
 
-setAutoVoidLogic = function(value)
+local AutoVoidToggle = createToggle(TabVoid, "Activar Auto Void & Claim", false, function(value)
     voidSessionToken = voidSessionToken + 1
     local currentToken = voidSessionToken
     getgenv().AutoVoidActive = value
-
-    if setFloatVoidToggleVisualState then
-        setFloatVoidToggleVisualState(value)
-    end
 
     updateOverlayUI()
 
@@ -2028,10 +1939,7 @@ setAutoVoidLogic = function(value)
         LblVoidStatus.Text = "Auto Void desactivado."
     end
     return true
-end
-
-local AutoVoidToggle
-AutoVoidToggle, setAutoVoidToggleState = createToggle(TabVoid, "Activar Auto Void & Claim", false, setAutoVoidLogic)
+end)
 
 local CardVoidStats, LblVoidStats = createCard(TabVoid, "Estadísticas del Void")
 CardVoidStatus, LblVoidStatus = createCard(TabVoid, "Estado Void")
