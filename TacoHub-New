@@ -1,5 +1,5 @@
--- TacoHub v2.6 (Versión Optimizada - Posiciones Independientes & UI & Anti-AFK Integrado) --
--- =================================================================
+-- TACOHUB v2.6 - REDISEÑO VISUAL DARK NEBULA (ULTRA HD & OVAL BORDERS)
+-- Conserva la lógica 100% idéntica e intacta del script original.
 
 if getgenv().TacoHubLoaded and getgenv().TacoHubUnload then
     pcall(getgenv().TacoHubUnload)
@@ -87,25 +87,27 @@ local voidClaimedCount = 0
 local isScriptRunning = true
 local connectionsToClean = {}
 
--- TEMA Y PALETA
+-- TEMA Y PALETA DARK NEBULA (ULTRA HD & COSMIC VIBES)
 local THEME = {
-    Background = Color3.fromRGB(15, 15, 20),
-    Sidebar = Color3.fromRGB(25, 25, 35),
-    CardBg = Color3.fromRGB(30, 32, 45),
-    Accent = Color3.fromRGB(120, 50, 200),
-    AccentDark = Color3.fromRGB(80, 25, 140),
-    AccentLight = Color3.fromRGB(170, 110, 245),
-    SoftPurple = Color3.fromRGB(110, 90, 190),
-    Text = Color3.fromRGB(255, 255, 255),
-    TextDark = Color3.fromRGB(15, 15, 20),
-    SubText = Color3.fromRGB(200, 205, 220),
-    Border = Color3.fromRGB(60, 60, 85),
-    TextOutline = Color3.fromRGB(0, 0, 0),
-    Danger = Color3.fromRGB(230, 60, 60),
-    Yellow = Color3.fromRGB(255, 220, 0),
-    Green = Color3.fromRGB(50, 200, 90),
-    StatusActive = Color3.fromRGB(70, 220, 90),
-    StatusInactive = Color3.fromRGB(150, 150, 160)
+    Background = Color3.fromRGB(11, 9, 22),       -- Negro cósmico profundo
+    Sidebar = Color3.fromRGB(18, 14, 34),          -- Púrpura oscuro nebulosa
+    CardBg = Color3.fromRGB(25, 20, 46),           -- Violeta oscuro para tarjetas
+    CardBgHover = Color3.fromRGB(36, 28, 62),
+    Accent = Color3.fromRGB(138, 58, 255),         -- Neón Púrpura Brilante
+    AccentDark = Color3.fromRGB(75, 25, 150),      -- Púrpura profundo
+    AccentLight = Color3.fromRGB(190, 125, 255),   -- Púrpura nebulosa suave
+    SoftPurple = Color3.fromRGB(115, 75, 215),
+    Text = Color3.fromRGB(245, 245, 255),          -- Blanco HD
+    TextDark = Color3.fromRGB(12, 10, 20),
+    SubText = Color3.fromRGB(175, 175, 215),       -- Gris violáceo elegante
+    Border = Color3.fromRGB(110, 65, 210),         -- Borde neón brillante
+    BorderSoft = Color3.fromRGB(60, 40, 100),     -- Borde suave
+    TextOutline = Color3.fromRGB(5, 5, 12),
+    Danger = Color3.fromRGB(240, 65, 90),          -- Rojo cósmico
+    Yellow = Color3.fromRGB(255, 215, 60),         -- Dorado estelar
+    Green = Color3.fromRGB(45, 220, 130),          -- Verde neón
+    StatusActive = Color3.fromRGB(50, 230, 140),
+    StatusInactive = Color3.fromRGB(130, 130, 160)
 }
 
 -- FUNCIONALIDADES DE UTILIDAD
@@ -120,7 +122,7 @@ local function formatNumber(n)
     return formatted
 end
 
--- BANNER FLOTANTE TEMPORAL DE NOTIFICACIÓN ANTI-AFK
+-- BANNER FLOTANTE TEMPORAL DE NOTIFICACIÓN ANTI-AFK (ESTILO NEBULA)
 local function mostrarBannerAFK()
     pcall(function()
         local existingBanner = CoreGui:FindFirstChild("TACOHUB_AFK_Notification") or player:WaitForChild("PlayerGui"):FindFirstChild("TACOHUB_AFK_Notification")
@@ -135,19 +137,19 @@ local function mostrarBannerAFK()
     if not sg.Parent then sg.Parent = player:WaitForChild("PlayerGui") end
 
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.fromOffset(360, 42)
-    frame.Position = UDim2.new(0.5, -180, 0.08, 0)
+    frame.Size = UDim2.fromOffset(370, 44)
+    frame.Position = UDim2.new(0.5, -185, 0.08, 0)
     frame.BackgroundColor3 = THEME.Sidebar
     frame.BorderSizePixel = 0
     frame.Parent = sg
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 14)
     corner.Parent = frame
 
     local stroke = Instance.new("UIStroke")
     stroke.Color = THEME.AccentLight
-    stroke.Thickness = 1.5
+    stroke.Thickness = 1.8
     stroke.Parent = frame
 
     local label = Instance.new("TextLabel")
@@ -347,7 +349,7 @@ local MainScreen, FloatingScreen
 local updateMerchantSummaryUI, updateVoidUI, closeActiveModalPicker, updateEggUI
 local setAutoHatchToggleState, setAutoHatchLogic, MerchantDropdown, setAutoBuyToggleState, startAutoBuyLogic
 
--- MODAL ALERTA
+-- MODAL ALERTA (DARK NEBULA REDISEÑADO)
 local AlertScreen = Instance.new("ScreenGui")
 AlertScreen.Name = "TACOHUB_AlertModal"
 AlertScreen.ResetOnSpawn = false
@@ -359,7 +361,7 @@ if not AlertScreen.Parent then AlertScreen.Parent = player:WaitForChild("PlayerG
 local AlertOverlay = Instance.new("TextButton")
 AlertOverlay.Size = UDim2.fromScale(1, 1)
 AlertOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-AlertOverlay.BackgroundTransparency = 0.5
+AlertOverlay.BackgroundTransparency = 0.65
 AlertOverlay.Text = ""
 AlertOverlay.AutoButtonColor = false
 AlertOverlay.Parent = AlertScreen
@@ -374,7 +376,7 @@ AlertFrame.Active = true
 AlertFrame.Parent = AlertScreen
 
 local AlertCorner = Instance.new("UICorner")
-AlertCorner.CornerRadius = UDim.new(0, 10)
+AlertCorner.CornerRadius = UDim.new(0, 16)
 AlertCorner.Parent = AlertFrame
 
 local AlertStroke = Instance.new("UIStroke")
@@ -398,23 +400,23 @@ AlertMsg.Position = UDim2.new(0, 15, 0, 50)
 AlertMsg.Text = "Mensaje de advertencia..."
 AlertMsg.TextColor3 = THEME.Text
 AlertMsg.Font = Enum.Font.GothamMedium
-AlertMsg.TextSize = 17
+AlertMsg.TextSize = 16
 AlertMsg.TextWrapped = true
 AlertMsg.BackgroundTransparency = 1
 AlertMsg.Parent = AlertFrame
 
 local BtnAlertOk = Instance.new("TextButton")
-BtnAlertOk.Size = UDim2.fromOffset(140, 40)
-BtnAlertOk.Position = UDim2.new(0.5, -70, 1, -52)
+BtnAlertOk.Size = UDim2.fromOffset(150, 40)
+BtnAlertOk.Position = UDim2.new(0.5, -75, 1, -52)
 BtnAlertOk.BackgroundColor3 = THEME.Accent
 BtnAlertOk.Text = "Entendido"
 BtnAlertOk.TextColor3 = Color3.fromRGB(255, 255, 255)
 BtnAlertOk.Font = Enum.Font.GothamBold
-BtnAlertOk.TextSize = 17
+BtnAlertOk.TextSize = 16
 BtnAlertOk.Parent = AlertFrame
 
 local btnAlertCorner = Instance.new("UICorner")
-btnAlertCorner.CornerRadius = UDim.new(0, 6)
+btnAlertCorner.CornerRadius = UDim.new(0, 12)
 btnAlertCorner.Parent = BtnAlertOk
 
 BtnAlertOk.MouseButton1Click:Connect(function() AlertScreen.Enabled = false end)
@@ -425,7 +427,7 @@ local function showAlert(titleText, msgText)
     AlertScreen.Enabled = true
 end
 
--- MODAL CONFIRMACIÓN
+-- MODAL CONFIRMACIÓN (DARK NEBULA REDISEÑADO)
 local ConfirmScreen = Instance.new("ScreenGui")
 ConfirmScreen.Name = "TACOHUB_ConfirmModal"
 ConfirmScreen.ResetOnSpawn = false
@@ -437,7 +439,7 @@ if not ConfirmScreen.Parent then ConfirmScreen.Parent = player:WaitForChild("Pla
 local OverlayBlocker = Instance.new("TextButton")
 OverlayBlocker.Size = UDim2.fromScale(1, 1)
 OverlayBlocker.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-OverlayBlocker.BackgroundTransparency = 0.5
+OverlayBlocker.BackgroundTransparency = 0.65
 OverlayBlocker.Text = ""
 OverlayBlocker.AutoButtonColor = false
 OverlayBlocker.Parent = ConfirmScreen
@@ -452,7 +454,7 @@ ConfirmFrame.Active = true
 ConfirmFrame.Parent = ConfirmScreen
 
 local ConfirmCorner = Instance.new("UICorner")
-ConfirmCorner.CornerRadius = UDim.new(0, 10)
+ConfirmCorner.CornerRadius = UDim.new(0, 16)
 ConfirmCorner.Parent = ConfirmFrame
 
 local ConfirmStroke = Instance.new("UIStroke")
@@ -476,43 +478,43 @@ ConfirmMsg.Position = UDim2.new(0, 15, 0, 50)
 ConfirmMsg.Text = "¿Estás seguro de que deseas cerrar TacoHub?\nSe detendrán todas las funciones."
 ConfirmMsg.TextColor3 = THEME.Text
 ConfirmMsg.Font = Enum.Font.GothamMedium
-ConfirmMsg.TextSize = 17
+ConfirmMsg.TextSize = 16
 ConfirmMsg.TextWrapped = true
 ConfirmMsg.BackgroundTransparency = 1
 ConfirmMsg.Parent = ConfirmFrame
 
 local BtnYes = Instance.new("TextButton")
-BtnYes.Size = UDim2.fromOffset(160, 44)
-BtnYes.Position = UDim2.new(0, 25, 1, -58)
+BtnYes.Size = UDim2.fromOffset(160, 42)
+BtnYes.Position = UDim2.new(0, 25, 1, -56)
 BtnYes.BackgroundColor3 = THEME.Danger
 BtnYes.Text = "Sí, Cerrar"
 BtnYes.TextColor3 = Color3.fromRGB(255, 255, 255)
 BtnYes.Font = Enum.Font.GothamBold
-BtnYes.TextSize = 18
+BtnYes.TextSize = 17
 BtnYes.Parent = ConfirmFrame
 
 local btnYesCorner = Instance.new("UICorner")
-btnYesCorner.CornerRadius = UDim.new(0, 6)
+btnYesCorner.CornerRadius = UDim.new(0, 12)
 btnYesCorner.Parent = BtnYes
 
 local BtnNo = Instance.new("TextButton")
-BtnNo.Size = UDim2.fromOffset(160, 44)
-BtnNo.Position = UDim2.new(1, -185, 1, -58)
+BtnNo.Size = UDim2.fromOffset(160, 42)
+BtnNo.Position = UDim2.new(1, -185, 1, -56)
 BtnNo.BackgroundColor3 = THEME.CardBg
 BtnNo.Text = "Cancelar"
 BtnNo.TextColor3 = THEME.Text
 BtnNo.Font = Enum.Font.GothamBold
-BtnNo.TextSize = 18
+BtnNo.TextSize = 17
 BtnNo.Parent = ConfirmFrame
 
 local btnNoCorner = Instance.new("UICorner")
-btnNoCorner.CornerRadius = UDim.new(0, 6)
+btnNoCorner.CornerRadius = UDim.new(0, 12)
 btnNoCorner.Parent = BtnNo
 
 BtnYes.MouseButton1Click:Connect(function() getgenv().TacoHubUnload() end)
 BtnNo.MouseButton1Click:Connect(function() ConfirmScreen.Enabled = false end)
 
--- INTERFAZ PRINCIPAL
+-- INTERFAZ PRINCIPAL (DARK NEBULA)
 MainScreen = Instance.new("ScreenGui")
 MainScreen.Name = "TACOHUB_MainUI"
 MainScreen.ResetOnSpawn = false
@@ -521,7 +523,7 @@ pcall(function() MainScreen.Parent = CoreGui end)
 if not MainScreen.Parent then MainScreen.Parent = player:WaitForChild("PlayerGui") end
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.fromOffset(720, 500)
+MainFrame.Size = UDim2.fromOffset(730, 510)
 MainFrame.Position = UDim2.fromScale(0.5, 0.5)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 MainFrame.BackgroundColor3 = THEME.Background
@@ -530,7 +532,7 @@ MainFrame.Active = true
 MainFrame.Parent = MainScreen
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.CornerRadius = UDim.new(0, 18)
 MainCorner.Parent = MainFrame
 
 local MainStroke = Instance.new("UIStroke")
@@ -546,15 +548,15 @@ MainHeader.Active = true
 MainHeader.Parent = MainFrame
 
 local HeaderCorner = Instance.new("UICorner")
-HeaderCorner.CornerRadius = UDim.new(0, 10)
+HeaderCorner.CornerRadius = UDim.new(0, 18)
 HeaderCorner.Parent = MainHeader
 
 applyDragLogic(MainHeader, MainFrame)
 
 local TitleText = Instance.new("TextLabel")
 TitleText.Size = UDim2.new(0, 350, 1, 0)
-TitleText.Position = UDim2.new(0, 15, 0, 0)
-TitleText.Text = "🌮 TACOHUB <font color=\"#AA66FF\">v2.6</font>"
+TitleText.Position = UDim2.new(0, 18, 0, 0)
+TitleText.Text = "🌮 TACOHUB <font color=\"#BE7DFF\">v2.6</font>"
 TitleText.RichText = true
 TitleText.TextColor3 = THEME.Text
 TitleText.Font = Enum.Font.GothamBlack
@@ -567,7 +569,7 @@ applyTextStroke(TitleText)
 
 local MinimizeMainBtn = Instance.new("TextButton")
 MinimizeMainBtn.Size = UDim2.fromOffset(38, 40)
-MinimizeMainBtn.Position = UDim2.new(1, -120, 0, 6)
+MinimizeMainBtn.Position = UDim2.new(1, -125, 0, 6)
 MinimizeMainBtn.Text = "−"
 MinimizeMainBtn.TextColor3 = THEME.SubText
 MinimizeMainBtn.Font = Enum.Font.GothamBlack
@@ -585,9 +587,9 @@ local CloseMainBtn = Instance.new("TextButton")
 CloseMainBtn.Size = UDim2.fromOffset(80, 40)
 CloseMainBtn.Position = UDim2.new(1, -85, 0, 6)
 CloseMainBtn.Text = "Cerrar"
-CloseMainBtn.TextColor3 = THEME.SubText
+CloseMainBtn.TextColor3 = THEME.Danger
 CloseMainBtn.Font = Enum.Font.GothamBold
-CloseMainBtn.TextSize = 17
+CloseMainBtn.TextSize = 16
 CloseMainBtn.BackgroundTransparency = 1
 CloseMainBtn.Parent = MainHeader
 
@@ -670,7 +672,7 @@ local function createTab(name, icon)
     btn.Text = " " .. icon .. "  " .. name:upper()
     btn.TextColor3 = THEME.SubText
     btn.Font = Enum.Font.GothamBlack
-    btn.TextSize = 17
+    btn.TextSize = 16
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.ZIndex = 3
     btn.Parent = Sidebar
@@ -678,7 +680,7 @@ local function createTab(name, icon)
     applyTextStroke(btn)
 
     local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 8)
+    btnCorner.CornerRadius = UDim.new(0, 12)
     btnCorner.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
@@ -711,7 +713,7 @@ local function createSectionHeader(parent, text)
     lbl.Text = text
     lbl.TextColor3 = THEME.AccentLight
     lbl.Font = Enum.Font.GothamBlack
-    lbl.TextSize = 20
+    lbl.TextSize = 19
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.BackgroundTransparency = 1
     lbl.Parent = parent
@@ -719,7 +721,7 @@ local function createSectionHeader(parent, text)
     return lbl
 end
 
--- COMPONENTES UI
+-- COMPONENTES UI (CON BORDES OVALADOS Y PALETA DARK NEBULA)
 local function createCard(parent, title)
     local card = Instance.new("Frame")
     card.Size = UDim2.new(1, 0, 0, 100)
@@ -727,23 +729,23 @@ local function createCard(parent, title)
     card.Parent = parent
 
     local cCorner = Instance.new("UICorner")
-    cCorner.CornerRadius = UDim.new(0, 8)
+    cCorner.CornerRadius = UDim.new(0, 14)
     cCorner.Parent = card
 
     local cStroke = Instance.new("UIStroke")
-    cStroke.Color = THEME.Border
-    cStroke.Thickness = 1
+    cStroke.Color = THEME.BorderSoft
+    cStroke.Thickness = 1.2
     cStroke.Parent = card
 
     local tLbl = Instance.new("TextLabel")
     tLbl.Name = "CardTitle"
     tLbl.Size = UDim2.new(1, -16, 0, 28)
-    tLbl.Position = UDim2.new(0, 8, 0, 6)
+    tLbl.Position = UDim2.new(0, 10, 0, 6)
     tLbl.Text = title
     tLbl.RichText = true
     tLbl.TextColor3 = THEME.AccentLight
     tLbl.Font = Enum.Font.GothamBlack
-    tLbl.TextSize = 18
+    tLbl.TextSize = 17
     tLbl.TextXAlignment = Enum.TextXAlignment.Left
     tLbl.BackgroundTransparency = 1
     tLbl.Parent = card
@@ -752,12 +754,12 @@ local function createCard(parent, title)
     local cLbl = Instance.new("TextLabel")
     cLbl.Name = "CardContent"
     cLbl.Size = UDim2.new(1, -16, 1, -38)
-    cLbl.Position = UDim2.new(0, 8, 0, 34)
+    cLbl.Position = UDim2.new(0, 10, 0, 34)
     cLbl.Text = "Cargando..."
     cLbl.RichText = true
     cLbl.TextColor3 = THEME.Text
     cLbl.Font = Enum.Font.GothamMedium
-    cLbl.TextSize = 16
+    cLbl.TextSize = 15
     cLbl.TextXAlignment = Enum.TextXAlignment.Left
     cLbl.TextYAlignment = Enum.TextYAlignment.Top
     cLbl.TextWrapped = true
@@ -774,25 +776,30 @@ local function createToggle(parent, text, default, callback)
     container.Parent = parent
 
     local cCorner = Instance.new("UICorner")
-    cCorner.CornerRadius = UDim.new(0, 8)
+    cCorner.CornerRadius = UDim.new(0, 14)
     cCorner.Parent = container
+
+    local cStroke = Instance.new("UIStroke")
+    cStroke.Color = THEME.BorderSoft
+    cStroke.Thickness = 1
+    cStroke.Parent = container
 
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -80, 1, 0)
-    lbl.Position = UDim2.new(0, 12, 0, 0)
+    lbl.Position = UDim2.new(0, 14, 0, 0)
     lbl.Text = text
     lbl.TextColor3 = THEME.Text
     lbl.Font = Enum.Font.GothamBold
-    lbl.TextSize = 18
+    lbl.TextSize = 17
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.BackgroundTransparency = 1
     lbl.Parent = container
 
     local toggleBtn = Instance.new("TextButton")
-    toggleBtn.Size = UDim2.fromOffset(58, 32)
-    toggleBtn.Position = UDim2.new(1, -68, 0.5, -16)
+    toggleBtn.Size = UDim2.fromOffset(60, 30)
+    toggleBtn.Position = UDim2.new(1, -72, 0.5, -15)
     toggleBtn.Text = ""
-    toggleBtn.BackgroundColor3 = default and THEME.Accent or THEME.Border
+    toggleBtn.BackgroundColor3 = default and THEME.Accent or THEME.BorderSoft
     toggleBtn.Parent = container
 
     local tCorner = Instance.new("UICorner")
@@ -800,8 +807,8 @@ local function createToggle(parent, text, default, callback)
     tCorner.Parent = toggleBtn
 
     local circle = Instance.new("Frame")
-    circle.Size = UDim2.fromOffset(24, 24)
-    circle.Position = default and UDim2.new(1, -28, 0.5, -12) or UDim2.new(0, 4, 0.5, -12)
+    circle.Size = UDim2.fromOffset(22, 22)
+    circle.Position = default and UDim2.new(1, -26, 0.5, -11) or UDim2.new(0, 4, 0.5, -11)
     circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     circle.Parent = toggleBtn
 
@@ -813,8 +820,8 @@ local function createToggle(parent, text, default, callback)
 
     local function setVisualState(newState)
         state = newState
-        TweenService:Create(toggleBtn, TweenInfo.new(0.2), {BackgroundColor3 = state and THEME.Accent or THEME.Border}):Play()
-        TweenService:Create(circle, TweenInfo.new(0.2), {Position = state and UDim2.new(1, -28, 0.5, -12) or UDim2.new(0, 4, 0.5, -12)}):Play()
+        TweenService:Create(toggleBtn, TweenInfo.new(0.2), {BackgroundColor3 = state and THEME.Accent or THEME.BorderSoft}):Play()
+        TweenService:Create(circle, TweenInfo.new(0.2), {Position = state and UDim2.new(1, -26, 0.5, -11) or UDim2.new(0, 4, 0.5, -11)}):Play()
     end
 
     toggleBtn.MouseButton1Click:Connect(function()
@@ -836,40 +843,45 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
     container.Parent = parent
 
     local cCorner = Instance.new("UICorner")
-    cCorner.CornerRadius = UDim.new(0, 8)
+    cCorner.CornerRadius = UDim.new(0, 14)
     cCorner.Parent = container
+
+    local cStroke = Instance.new("UIStroke")
+    cStroke.Color = THEME.BorderSoft
+    cStroke.Thickness = 1
+    cStroke.Parent = container
 
     local selectedValue = defaultVal or ""
 
     local TitleLbl = Instance.new("TextLabel")
     TitleLbl.Size = UDim2.new(0.58, 0, 1, 0)
-    TitleLbl.Position = UDim2.new(0, 12, 0, 0)
+    TitleLbl.Position = UDim2.new(0, 14, 0, 0)
     TitleLbl.RichText = true
     TitleLbl.Font = Enum.Font.GothamMedium
-    TitleLbl.TextSize = 18
+    TitleLbl.TextSize = 17
     TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
     TitleLbl.BackgroundTransparency = 1
     TitleLbl.Parent = container
 
     local ActionBtn = Instance.new("TextButton")
-    ActionBtn.Size = UDim2.new(0.38, -10, 0, 40)
-    ActionBtn.Position = UDim2.new(0.62, 0, 0.5, -20)
+    ActionBtn.Size = UDim2.new(0.38, -10, 0, 38)
+    ActionBtn.Position = UDim2.new(0.62, 0, 0.5, -19)
     ActionBtn.BackgroundColor3 = THEME.Sidebar
     ActionBtn.Text = btnText
     ActionBtn.TextColor3 = THEME.Text
     ActionBtn.Font = Enum.Font.GothamMedium
-    ActionBtn.TextSize = 16
+    ActionBtn.TextSize = 15
     ActionBtn.BorderSizePixel = 0
     ActionBtn.TextWrapped = true
     ActionBtn.Parent = container
 
     local abCorner = Instance.new("UICorner")
-    abCorner.CornerRadius = UDim.new(0, 6)
+    abCorner.CornerRadius = UDim.new(0, 10)
     abCorner.Parent = ActionBtn
 
     local function updateText()
         local valDisplay = (selectedValue and selectedValue ~= "") and selectedValue or "Ninguno"
-        TitleLbl.Text = string.format("<font color=\"#FFFFFF\">%s:</font> <font color=\"#FFDC00\"><b>%s</b></font>", labelText, valDisplay)
+        TitleLbl.Text = string.format("<font color=\"#FFFFFF\">%s:</font> <font color=\"#FFD73C\"><b>%s</b></font>", labelText, valDisplay)
     end
     updateText()
 
@@ -879,7 +891,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         local Overlay = Instance.new("TextButton")
         Overlay.Size = UDim2.fromScale(1, 1)
         Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        Overlay.BackgroundTransparency = 0.55
+        Overlay.BackgroundTransparency = 0.65
         Overlay.Text = ""
         Overlay.AutoButtonColor = false
         Overlay.Parent = PickerModalScreen
@@ -894,7 +906,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Frame.Parent = PickerModalScreen
 
         local fCorner = Instance.new("UICorner")
-        fCorner.CornerRadius = UDim.new(0, 10)
+        fCorner.CornerRadius = UDim.new(0, 18)
         fCorner.Parent = Frame
 
         local fStroke = Instance.new("UIStroke")
@@ -904,11 +916,11 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
 
         local Title = Instance.new("TextLabel")
         Title.Size = UDim2.new(1, -60, 0, 35)
-        Title.Position = UDim2.new(0, 12, 0, 10)
+        Title.Position = UDim2.new(0, 14, 0, 10)
         Title.Text = "🔍 " .. labelText
         Title.TextColor3 = THEME.AccentLight
         Title.Font = Enum.Font.GothamBlack
-        Title.TextSize = 22
+        Title.TextSize = 21
         Title.TextXAlignment = Enum.TextXAlignment.Left
         Title.BackgroundTransparency = 1
         Title.Parent = Frame
@@ -917,33 +929,33 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         local CloseModalBtn = Instance.new("TextButton")
         CloseModalBtn.Size = UDim2.fromOffset(36, 36)
         CloseModalBtn.Position = UDim2.new(1, -42, 0, 8)
-        CloseModalBtn.Text = "X"
+        CloseModalBtn.Text = "✕"
         CloseModalBtn.TextColor3 = THEME.Danger
         CloseModalBtn.Font = Enum.Font.GothamBlack
-        CloseModalBtn.TextSize = 22
+        CloseModalBtn.TextSize = 20
         CloseModalBtn.BackgroundTransparency = 1
         CloseModalBtn.Parent = Frame
         CloseModalBtn.MouseButton1Click:Connect(closeActiveModalPicker)
 
         local SearchBox = Instance.new("TextBox")
-        SearchBox.Size = UDim2.new(1, -24, 0, 40)
-        SearchBox.Position = UDim2.new(0, 12, 0, 52)
+        SearchBox.Size = UDim2.new(1, -28, 0, 40)
+        SearchBox.Position = UDim2.new(0, 14, 0, 52)
         SearchBox.BackgroundColor3 = THEME.Sidebar
         SearchBox.PlaceholderText = "Escribe para buscar..."
         SearchBox.PlaceholderColor3 = THEME.SubText
         SearchBox.Text = ""
         SearchBox.TextColor3 = THEME.Text
         SearchBox.Font = Enum.Font.GothamBold
-        SearchBox.TextSize = 17
+        SearchBox.TextSize = 16
         SearchBox.Parent = Frame
 
         local sbCorner = Instance.new("UICorner")
-        sbCorner.CornerRadius = UDim.new(0, 6)
+        sbCorner.CornerRadius = UDim.new(0, 10)
         sbCorner.Parent = SearchBox
 
         local Scroll = Instance.new("ScrollingFrame")
-        Scroll.Size = UDim2.new(1, -24, 1, -165)
-        Scroll.Position = UDim2.new(0, 12, 0, 100)
+        Scroll.Size = UDim2.new(1, -28, 1, -165)
+        Scroll.Position = UDim2.new(0, 14, 0, 100)
         Scroll.BackgroundTransparency = 1
         Scroll.BorderSizePixel = 0
         Scroll.ScrollBarThickness = 6
@@ -951,7 +963,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Scroll.Parent = Frame
 
         local ListLayout = Instance.new("UIListLayout")
-        ListLayout.Padding = UDim.new(0, 4)
+        ListLayout.Padding = UDim.new(0, 5)
         ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
         ListLayout.Parent = Scroll
 
@@ -960,8 +972,8 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         local function updateStyles()
             for _, b in ipairs(itemButtons) do
                 if b.Name == selectedValue then
-                    b.BackgroundColor3 = THEME.SoftPurple
-                    b.TextColor3 = THEME.TextDark
+                    b.BackgroundColor3 = THEME.Accent
+                    b.TextColor3 = Color3.fromRGB(255, 255, 255)
                 else
                     b.BackgroundColor3 = THEME.CardBg
                     b.TextColor3 = THEME.Text
@@ -987,12 +999,12 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
             itemBtn.Text = "  " .. tostring(opt)
             itemBtn.TextColor3 = THEME.Text
             itemBtn.Font = Enum.Font.GothamMedium
-            itemBtn.TextSize = 17
+            itemBtn.TextSize = 15
             itemBtn.TextXAlignment = Enum.TextXAlignment.Left
             itemBtn.Parent = Scroll
 
             local ibCorner = Instance.new("UICorner")
-            ibCorner.CornerRadius = UDim.new(0, 5)
+            ibCorner.CornerRadius = UDim.new(0, 8)
             ibCorner.Parent = itemBtn
 
             itemBtn.MouseButton1Click:Connect(function()
@@ -1013,16 +1025,16 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
 
         local BtnClear = Instance.new("TextButton")
         BtnClear.Size = UDim2.fromOffset(130, 42)
-        BtnClear.Position = UDim2.new(0, 12, 1, -50)
+        BtnClear.Position = UDim2.new(0, 14, 1, -50)
         BtnClear.BackgroundColor3 = THEME.Sidebar
         BtnClear.Text = "✕ Limpiar"
         BtnClear.TextColor3 = THEME.Danger
         BtnClear.Font = Enum.Font.GothamBold
-        BtnClear.TextSize = 17
+        BtnClear.TextSize = 16
         BtnClear.Parent = Frame
 
         local bcCorner = Instance.new("UICorner")
-        bcCorner.CornerRadius = UDim.new(0, 8)
+        bcCorner.CornerRadius = UDim.new(0, 12)
         bcCorner.Parent = BtnClear
 
         BtnClear.MouseButton1Click:Connect(function()
@@ -1035,17 +1047,17 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         end)
 
         local BtnConfirm = Instance.new("TextButton")
-        BtnConfirm.Size = UDim2.new(1, -166, 0, 42)
+        BtnConfirm.Size = UDim2.new(1, -168, 0, 42)
         BtnConfirm.Position = UDim2.new(0, 154, 1, -50)
         BtnConfirm.BackgroundColor3 = THEME.Green
         BtnConfirm.Text = "✓ Confirmar"
         BtnConfirm.TextColor3 = THEME.TextDark
         BtnConfirm.Font = Enum.Font.GothamBold
-        BtnConfirm.TextSize = 18
+        BtnConfirm.TextSize = 17
         BtnConfirm.Parent = Frame
 
         local bcfCorner = Instance.new("UICorner")
-        bcfCorner.CornerRadius = UDim.new(0, 8)
+        bcfCorner.CornerRadius = UDim.new(0, 12)
         bcfCorner.Parent = BtnConfirm
 
         BtnConfirm.MouseButton1Click:Connect(closeActiveModalPicker)
@@ -1063,7 +1075,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
     }
 end
 
--- PANTALLA FLOTANTE Y ÍCONO MINIMIZADO (POSICIONES INDEPENDIENTES)
+-- PANTALLA FLOTANTE Y ÍCONO MINIMIZADO (DARK NEBULA - OVAL & ULTRA HD)
 FloatingScreen = Instance.new("ScreenGui")
 FloatingScreen.Name = "TACOHUB_FloatingUI"
 FloatingScreen.ResetOnSpawn = false
@@ -1073,7 +1085,7 @@ pcall(function() FloatingScreen.Parent = CoreGui end)
 if not FloatingScreen.Parent then FloatingScreen.Parent = player:WaitForChild("PlayerGui") end
 
 local FloatFrame = Instance.new("Frame")
-FloatFrame.Size = UDim2.fromOffset(340, 280)
+FloatFrame.Size = UDim2.fromOffset(350, 285)
 FloatFrame.Position = UDim2.new(0.02, 0, 0.25, 0)
 FloatFrame.BackgroundColor3 = THEME.Background
 FloatFrame.BorderSizePixel = 0
@@ -1082,7 +1094,7 @@ FloatFrame.Active = true
 FloatFrame.Parent = FloatingScreen
 
 local FloatCorner = Instance.new("UICorner")
-FloatCorner.CornerRadius = UDim.new(0, 10)
+FloatCorner.CornerRadius = UDim.new(0, 18)
 FloatCorner.Parent = FloatFrame
 
 local FloatStroke = Instance.new("UIStroke")
@@ -1091,25 +1103,25 @@ FloatStroke.Thickness = 2
 FloatStroke.Parent = FloatFrame
 
 local HeaderBar = Instance.new("Frame")
-HeaderBar.Size = UDim2.new(1, 0, 0, 42)
+HeaderBar.Size = UDim2.new(1, 0, 0, 44)
 HeaderBar.BackgroundColor3 = THEME.Sidebar
 HeaderBar.BorderSizePixel = 0
 HeaderBar.Active = true
 HeaderBar.Parent = FloatFrame
 
 local HeaderBarCorner = Instance.new("UICorner")
-HeaderBarCorner.CornerRadius = UDim.new(0, 10)
+HeaderBarCorner.CornerRadius = UDim.new(0, 18)
 HeaderBarCorner.Parent = HeaderBar
 
 applyDragLogic(HeaderBar, FloatFrame)
 
 local TitleLbl = Instance.new("TextLabel")
 TitleLbl.Size = UDim2.new(1, -125, 1, 0)
-TitleLbl.Position = UDim2.new(0, 10, 0, 0)
+TitleLbl.Position = UDim2.new(0, 14, 0, 0)
 TitleLbl.Text = "🌮 TacoHub [⚪ INACTIVO]"
 TitleLbl.TextColor3 = THEME.Text
 TitleLbl.Font = Enum.Font.GothamBlack
-TitleLbl.TextSize = 15
+TitleLbl.TextSize = 14
 TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
 TitleLbl.BackgroundTransparency = 1
 TitleLbl.Parent = HeaderBar
@@ -1117,8 +1129,8 @@ TitleLbl.Parent = HeaderBar
 applyTextStroke(TitleLbl)
 
 local ReturnMainBtn = Instance.new("TextButton")
-ReturnMainBtn.Size = UDim2.fromOffset(80, 28)
-ReturnMainBtn.Position = UDim2.new(1, -112, 0.5, -14)
+ReturnMainBtn.Size = UDim2.fromOffset(82, 28)
+ReturnMainBtn.Position = UDim2.new(1, -114, 0.5, -14)
 ReturnMainBtn.Text = "🏠 Volver"
 ReturnMainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ReturnMainBtn.BackgroundColor3 = THEME.Accent
@@ -1128,7 +1140,7 @@ ReturnMainBtn.ZIndex = 2
 ReturnMainBtn.Parent = HeaderBar
 
 local rBtnCorner = Instance.new("UICorner")
-rBtnCorner.CornerRadius = UDim.new(0, 6)
+rBtnCorner.CornerRadius = UDim.new(0, 8)
 rBtnCorner.Parent = ReturnMainBtn
 
 ReturnMainBtn.MouseButton1Click:Connect(function()
@@ -1142,14 +1154,14 @@ MinimizeBtn.Position = UDim2.new(1, -30, 0, 0)
 MinimizeBtn.Text = "−"
 MinimizeBtn.TextColor3 = THEME.SubText
 MinimizeBtn.Font = Enum.Font.GothamBlack
-MinimizeBtn.TextSize = 20
+MinimizeBtn.TextSize = 22
 MinimizeBtn.BackgroundTransparency = 1
 MinimizeBtn.ZIndex = 2
 MinimizeBtn.Parent = HeaderBar
 
--- CUADRO MINIMIZADO CON NOMBRE COMPLETO "TacoHub" Y ARRASTRE INDEPENDIENTE
+-- ÍCONO MINIMIZADO EN FORMA DE CÁPSULA OVALADA DARK NEBULA
 local MinimizedFrame = Instance.new("Frame")
-MinimizedFrame.Size = UDim2.fromOffset(95, 36)
+MinimizedFrame.Size = UDim2.fromOffset(105, 38)
 MinimizedFrame.Position = UDim2.new(0.02, 0, 0.25, 0)
 MinimizedFrame.BackgroundColor3 = THEME.Sidebar
 MinimizedFrame.BorderSizePixel = 0
@@ -1159,19 +1171,19 @@ MinimizedFrame.Visible = false
 MinimizedFrame.Parent = FloatingScreen
 
 local minFrameCorner = Instance.new("UICorner")
-minFrameCorner.CornerRadius = UDim.new(0, 8)
+minFrameCorner.CornerRadius = UDim.new(1, 0)
 minFrameCorner.Parent = MinimizedFrame
 
 local minFrameStroke = Instance.new("UIStroke")
 minFrameStroke.Color = THEME.Border
-minFrameStroke.Thickness = 1.5
+minFrameStroke.Thickness = 1.8
 minFrameStroke.Parent = MinimizedFrame
 
 applyDragLogic(MinimizedFrame, MinimizedFrame)
 
 local MinimizedText = Instance.new("TextLabel")
-MinimizedText.Size = UDim2.new(1, -16, 1, 0)
-MinimizedText.Position = UDim2.new(0, 6, 0, 0)
+MinimizedText.Size = UDim2.new(1, -20, 1, 0)
+MinimizedText.Position = UDim2.new(0, 10, 0, 0)
 MinimizedText.BackgroundTransparency = 1
 MinimizedText.Text = "🌮 <b>TacoHub</b>"
 MinimizedText.RichText = true
@@ -1182,8 +1194,8 @@ MinimizedText.TextXAlignment = Enum.TextXAlignment.Left
 MinimizedText.Parent = MinimizedFrame
 
 local StatusDot = Instance.new("Frame")
-StatusDot.Size = UDim2.fromOffset(8, 8)
-StatusDot.Position = UDim2.new(1, -12, 0.5, -4)
+StatusDot.Size = UDim2.fromOffset(10, 10)
+StatusDot.Position = UDim2.new(1, -16, 0.5, -5)
 StatusDot.BackgroundColor3 = THEME.StatusInactive
 StatusDot.BorderSizePixel = 0
 StatusDot.Parent = MinimizedFrame
@@ -1237,8 +1249,8 @@ table.insert(connectionsToClean, UserInputService.InputEnded:Connect(function(in
 end))
 
 local ScrollFloat = Instance.new("ScrollingFrame")
-ScrollFloat.Size = UDim2.new(1, -12, 1, -48)
-ScrollFloat.Position = UDim2.new(0, 6, 0, 44)
+ScrollFloat.Size = UDim2.new(1, -12, 1, -50)
+ScrollFloat.Position = UDim2.new(0, 6, 0, 46)
 ScrollFloat.BackgroundTransparency = 1
 ScrollFloat.BorderSizePixel = 0
 ScrollFloat.ScrollBarThickness = 5
@@ -1275,7 +1287,7 @@ local function buildEggString()
     for name, count in pairs(petsInventoryTrack) do
         local nameLower = name:lower()
         if nameLower:find("olympic") or nameLower:find("secret") then
-            table.insert(itemsList, string.format("• <font color=\"#FF66FF\"><b>%s</b></font>: <font color=\"#FFDC00\">x%s</font>", name, formatNumber(count)))
+            table.insert(itemsList, string.format("• <font color=\"#FF66FF\"><b>%s</b></font>: <font color=\"#FFD73C\">x%s</font>", name, formatNumber(count)))
         else
             table.insert(itemsList, string.format("• %s: x%s", name, formatNumber(count)))
         end
@@ -1326,19 +1338,18 @@ local function updateOverlayUI()
         StatusDot.BackgroundColor3 = THEME.StatusInactive
     end
 
-    -- Integración del Anti-AFK directamente dentro de la tarjeta Estado General
-    local afkLine = "🛡️ Anti-AFK: <font color=\"#46DC5A\"><b>Activo</b></font>"
+    local afkLine = "🛡️ Anti-AFK: <font color=\"#32E68C\"><b>Activo</b></font>"
     LblStatus.Text = statusHeader .. "\n" .. afkLine
     CardStatus.Size = UDim2.new(1, 0, 0, 75)
 
-    local selectedEggDisplay = (selectedEggValue ~= "") and (" <font color=\"#FFDC00\">[" .. selectedEggValue .. "]</font>") or " <font color=\"#AAAAAA\">[Ninguno]</font>"
+    local selectedEggDisplay = (selectedEggValue ~= "") and (" <font color=\"#FFD73C\">[" .. selectedEggValue .. "]</font>") or " <font color=\"#AAAAAA\">[Ninguno]</font>"
     TitleEggs.Text = "HUEVOS" .. selectedEggDisplay
 
     local eggText = buildEggString()
     LblEggs.Text = eggText
     CardEggs.Size = UDim2.new(1, 0, 0, math.max(75, #eggText:split("\n") * 22 + 35))
 
-    local selectedShopDisplay = (selectedMerchantValue ~= "") and (" <font color=\"#FFDC00\">[" .. selectedMerchantValue .. "]</font>") or " <font color=\"#AAAAAA\">[Ninguna]</font>"
+    local selectedShopDisplay = (selectedMerchantValue ~= "") and (" <font color=\"#FFD73C\">[" .. selectedMerchantValue .. "]</font>") or " <font color=\"#AAAAAA\">[Ninguna]</font>"
     TitleShop.Text = "TIENDA" .. selectedShopDisplay
 
     local restockStr = ""
@@ -1464,7 +1475,7 @@ BtnSaveEggConfig.TextWrapped = true
 BtnSaveEggConfig.Parent = ConfigContainer
 
 local saveCorner = Instance.new("UICorner")
-saveCorner.CornerRadius = UDim.new(0, 8)
+saveCorner.CornerRadius = UDim.new(0, 12)
 saveCorner.Parent = BtnSaveEggConfig
 
 local BtnClearEggConfig = Instance.new("TextButton")
@@ -1478,7 +1489,7 @@ BtnClearEggConfig.TextSize = 15
 BtnClearEggConfig.Parent = ConfigContainer
 
 local clearCorner = Instance.new("UICorner")
-clearCorner.CornerRadius = UDim.new(0, 8)
+clearCorner.CornerRadius = UDim.new(0, 12)
 clearCorner.Parent = BtnClearEggConfig
 
 local function refreshSavedConfigBtnText()
@@ -1541,7 +1552,7 @@ ModalFrame.Active = true
 ModalFrame.Parent = ModalScreen
 
 local ModalCorner = Instance.new("UICorner")
-ModalCorner.CornerRadius = UDim.new(0, 10)
+ModalCorner.CornerRadius = UDim.new(0, 18)
 ModalCorner.Parent = ModalFrame
 
 local ModalStroke = Instance.new("UIStroke")
@@ -1555,7 +1566,7 @@ ModalTitle.Position = UDim2.new(0, 15, 0, 5)
 ModalTitle.Text = "Selección de Ítems Disponibles"
 ModalTitle.TextColor3 = THEME.Text
 ModalTitle.Font = Enum.Font.GothamBlack
-ModalTitle.TextSize = 21
+ModalTitle.TextSize = 20
 ModalTitle.TextXAlignment = Enum.TextXAlignment.Left
 ModalTitle.BackgroundTransparency = 1
 ModalTitle.Parent = ModalFrame
@@ -1564,10 +1575,10 @@ applyTextStroke(ModalTitle)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.fromOffset(40, 40)
 CloseBtn.Position = UDim2.new(1, -45, 0, 6)
-CloseBtn.Text = "X"
+CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = THEME.Danger
 CloseBtn.Font = Enum.Font.GothamBlack
-CloseBtn.TextSize = 22
+CloseBtn.TextSize = 20
 CloseBtn.BackgroundTransparency = 1
 CloseBtn.Parent = ModalFrame
 CloseBtn.MouseButton1Click:Connect(function() ModalScreen.Enabled = false end)
@@ -1594,11 +1605,11 @@ ConfirmModalBtn.BackgroundColor3 = THEME.Green
 ConfirmModalBtn.Text = "✓ Confirmar Selección"
 ConfirmModalBtn.TextColor3 = THEME.TextDark
 ConfirmModalBtn.Font = Enum.Font.GothamBold
-ConfirmModalBtn.TextSize = 19
+ConfirmModalBtn.TextSize = 18
 ConfirmModalBtn.Parent = ModalFrame
 
 local confirmCorner = Instance.new("UICorner")
-confirmCorner.CornerRadius = UDim.new(0, 8)
+confirmCorner.CornerRadius = UDim.new(0, 12)
 confirmCorner.Parent = ConfirmModalBtn
 
 ConfirmModalBtn.MouseButton1Click:Connect(function() ModalScreen.Enabled = false end)
@@ -1613,7 +1624,7 @@ updateSelectItemsBtnText = function()
     else
         local count = getSelectedMerchantItemsCount()
         if count > 0 then
-            SelectItemsBtn.Text = string.format("📦 Seleccionar items [%s] (<font color=\"#FFDC00\"><b>%d seleccionados</b></font>)", selectedMerchantValue, count)
+            SelectItemsBtn.Text = string.format("📦 Seleccionar items [%s] (<font color=\"#FFD73C\"><b>%d seleccionados</b></font>)", selectedMerchantValue, count)
         else
             SelectItemsBtn.Text = string.format("📦 Seleccionar items [%s] (<font color=\"#AAAAAA\">Sin seleccionados</font>)", selectedMerchantValue)
         end
@@ -1634,18 +1645,18 @@ local populateGridItems = function(merchantName)
         btn.Text = itemName
         btn.Size = UDim2.new(0, 175, 0, 75)
         btn.Font = Enum.Font.GothamMedium
-        btn.TextSize = 16
+        btn.TextSize = 15
         btn.TextWrapped = true
         btn.Parent = ModalScroll
 
         local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 8)
+        corner.CornerRadius = UDim.new(0, 10)
         corner.Parent = btn
 
         local function applyStyle()
             if selectedMerchantItems[itemName] then
-                btn.BackgroundColor3 = THEME.SoftPurple
-                btn.TextColor3 = THEME.TextDark
+                btn.BackgroundColor3 = THEME.Accent
+                btn.TextColor3 = Color3.fromRGB(255, 255, 255)
             else
                 btn.BackgroundColor3 = THEME.CardBg
                 btn.TextColor3 = THEME.Text
@@ -1762,13 +1773,13 @@ SelectItemsBtn.Text = "📦 Seleccionar items <font color=\"#AAAAAA\">[Ninguna T
 SelectItemsBtn.RichText = true
 SelectItemsBtn.TextColor3 = THEME.Text
 SelectItemsBtn.Font = Enum.Font.GothamMedium
-SelectItemsBtn.TextSize = 17
+SelectItemsBtn.TextSize = 16
 SelectItemsBtn.BorderSizePixel = 0
 SelectItemsBtn.TextWrapped = true
 SelectItemsBtn.Parent = TabMerchant
 
 local sibCorner = Instance.new("UICorner")
-sibCorner.CornerRadius = UDim.new(0, 8)
+sibCorner.CornerRadius = UDim.new(0, 14)
 sibCorner.Parent = SelectItemsBtn
 
 SelectItemsBtn.MouseButton1Click:Connect(function()
@@ -1798,7 +1809,7 @@ BtnSaveShopConfig.TextWrapped = true
 BtnSaveShopConfig.Parent = ShopConfigContainer
 
 local saveShopCorner = Instance.new("UICorner")
-saveShopCorner.CornerRadius = UDim.new(0, 8)
+saveShopCorner.CornerRadius = UDim.new(0, 12)
 saveShopCorner.Parent = BtnSaveShopConfig
 
 local BtnClearShopConfig = Instance.new("TextButton")
@@ -1812,7 +1823,7 @@ BtnClearShopConfig.TextSize = 15
 BtnClearShopConfig.Parent = ShopConfigContainer
 
 local clearShopCorner = Instance.new("UICorner")
-clearShopCorner.CornerRadius = UDim.new(0, 8)
+clearShopCorner.CornerRadius = UDim.new(0, 12)
 clearShopCorner.Parent = BtnClearShopConfig
 
 local function refreshSavedShopConfigBtnText()
@@ -1958,7 +1969,7 @@ local CardAFKMain, LblAFKMain = createCard(TabAFK, "ESTADO GENERAL")
 LblAFKMain.Text = "Status: AFK Activo"
 LblAFKMain.TextColor3 = THEME.StatusActive
 LblAFKMain.Font = Enum.Font.GothamBlack
-LblAFKMain.TextSize = 20
+LblAFKMain.TextSize = 19
 CardAFKMain.Size = UDim2.new(1, 0, 0, 70)
 
 -- ACTIVACIÓN FORZADA DE PESTAÑA INICIAL (HUEVOS)
