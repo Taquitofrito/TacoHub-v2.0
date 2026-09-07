@@ -1,4 +1,4 @@
--- TacoHub v2.6 (Edición Neón & Fondo Cósmico Automático) --
+-- TacoHub v3.0 (Edición Neón & Fondo Cósmico Automático)[cite: 4]
 -- =================================================================
 
 if getgenv().TacoHubLoaded and getgenv().TacoHubUnload then
@@ -588,7 +588,7 @@ applyDragLogic(MainHeader, MainFrame)
 local TitleText = Instance.new("TextLabel")
 TitleText.Size = UDim2.new(0, 350, 1, 0)
 TitleText.Position = UDim2.new(0, 15, 0, 0)
-TitleText.Text = "🌮 TACOHUB <font color=\"#AA66FF\">v2.6</font>"
+TitleText.Text = "🌮 TACOHUB <font color=\"#AA66FF\">v3.0</font>"
 TitleText.RichText = true
 TitleText.TextColor3 = THEME.Text
 TitleText.Font = Enum.Font.GothamBlack
