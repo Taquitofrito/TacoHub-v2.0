@@ -1,5 +1,5 @@
 -- =================================================================
--- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio - Corregido)
+-- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio)
 -- =================================================================
 
 if getgenv().TacoHubLoaded and getgenv().TacoHubUnload then
@@ -1574,31 +1574,34 @@ local function refreshSavedConfigBtnText()
     if savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
         BtnSaveEggConfig.Text = string.format("💾 Guardar Conf: [%s - %s]", savedEggConfig.Egg, savedEggConfig.Amount or "50x")
     else
-        BtnSaveEggConfig.Text = "💾 Guardar última configuración de huevo: [ninguno]"
+        BtnSaveEggConfig.Text = "💾 Guardar Conf: [Ninguno]"
     end
 end
 refreshSavedConfigBtnText()
 
+-- PUNTO 2 CORREGIDO: Guarda correctamente si hay huevo seleccionado, o lanza alerta si no hay.
 BtnSaveEggConfig.MouseButton1Click:Connect(function()
     if not selectedEggValue or selectedEggValue == "" then
-        showAlert("⚠️ Huevo no seleccionado", "No tienes seleccionado ningún huevo. Selecciona uno primero para poder guardar la configuración.")
+        showAlert("⚠️ Huevo no seleccionado", "No tienes ningún huevo seleccionado. Por favor selecciona uno primero.")
         return
     end
     savedEggConfig.Egg = selectedEggValue
     savedEggConfig.Amount = selectedAmountValue or "50x"
     saveEggConfigToFile()
     refreshSavedConfigBtnText()
-    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente la configuración:\nHuevo: %s\nApertura: %s", savedEggConfig.Egg, savedEggConfig.Amount))
+    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente la configuración del huevo:\nHuevo: %s\nApertura: %s", savedEggConfig.Egg, savedEggConfig.Amount))
 end)
 
+-- PUNTO 3 CORREGIDO: Muestra mensaje de confirmación y cambia la leyenda a "Ninguno"
 BtnClearEggConfig.MouseButton1Click:Connect(function()
     savedEggConfig.Egg = ""
     savedEggConfig.Amount = "50x"
     saveEggConfigToFile()
     refreshSavedConfigBtnText()
-    showAlert("🗑 Configuración Limpiada", "Ya se borró la configuración guardada del huevo.")
+    showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada de huevo.")
 end)
 
+-- PUNTO 8: Toggle independiente de activación de última configuración de huevo
 local AutoStartToggle, setAutoStartToggleState = createToggle(TabHuevos, "Activar última configuración guardada", savedEggConfig.AutoStart, function(enabled)
     savedEggConfig.AutoStart = enabled
     saveEggConfigToFile()
@@ -1709,6 +1712,7 @@ updateSelectItemsBtnText = function()
     end
 end
 
+-- PUNTO 1 CORREGIDO: Mapeo y generación dinámica de items en tiempo real al abrir o cambiar la tienda.
 local populateGridItems = function(merchantName)
     for _, child in ipairs(ModalScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
@@ -1716,14 +1720,17 @@ local populateGridItems = function(merchantName)
 
     if not merchantName or merchantName == "" then return end
 
-    local items = merchantItemsMap[merchantName] or {}
+    -- Re-obtener mapas por si Knit cargó items dinámicos
+    local _, dynamicItemsMap, dynamicDataMap = getAllMerchantItems()
+    local items = dynamicItemsMap[merchantName] or merchantItemsMap[merchantName] or {}
+    
     for _, itemName in ipairs(items) do
         local btn = Instance.new("TextButton")
         btn.Name = itemName
         btn.Text = itemName
         btn.Size = UDim2.new(0, 175, 0, 75)
         btn.Font = Enum.Font.GothamMedium
-        btn.TextSize = 16
+        btn.TextSize = 14
         btn.TextWrapped = true
         btn.Parent = ModalScroll
 
@@ -1867,6 +1874,7 @@ sibCorner.Parent = SelectItemsBtn
 
 createNeonStroke(SelectItemsBtn, THEME.Border, 1)
 
+-- PUNTO 1 CORREGIDO: Abre la ventana modal cargando correctamente la lista de items
 SelectItemsBtn.MouseButton1Click:Connect(function()
     if selectedMerchantValue and selectedMerchantValue ~= "" then
         ModalTitle.Text = "Ítems: " .. tostring(selectedMerchantValue)
@@ -1930,20 +1938,21 @@ local function refreshSavedShopConfigBtnText()
     if savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
         BtnSaveShopConfig.Text = string.format("💾 Guardar Conf: [%s - %d Ítems]", savedShopConfig.Merchant, #savedItemsList)
     else
-        BtnSaveShopConfig.Text = "💾 Guardar última configuración de tienda: [ninguno]"
+        BtnSaveShopConfig.Text = "💾 Guardar Conf: [Ninguno]"
     end
 end
 refreshSavedShopConfigBtnText()
 
+-- PUNTO 4 CORREGIDO: Guarda la configuración de la tienda activa y sus ítems, alertando si falta alguno.
 BtnSaveShopConfig.MouseButton1Click:Connect(function()
     if not selectedMerchantValue or selectedMerchantValue == "" then
-        showAlert("⚠️ Tienda no seleccionada", "No tienes seleccionada ninguna tienda. Selecciona una primero para poder guardar la configuración.")
+        showAlert("⚠️ Tienda no seleccionada", "No tienes ninguna tienda seleccionada. Por favor selecciona una primero.")
         return
     end
 
     local count = getSelectedMerchantItemsCount()
     if count == 0 then
-        showAlert("⚠️ Ítems no seleccionados", "Selecciona al menos 1 ítem de la tienda para guardar la configuración.")
+        showAlert("⚠️ Ítems no seleccionados", "Selecciona al menos 1 ítem de la tienda antes de guardar la configuración.")
         return
     end
 
@@ -1955,17 +1964,19 @@ BtnSaveShopConfig.MouseButton1Click:Connect(function()
 
     saveShopConfigToFile()
     refreshSavedShopConfigBtnText()
-    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente la configuración:\nTienda: %s\nÍtems Seleccionados: %d", savedShopConfig.Merchant, count))
+    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente la configuración de la tienda:\nTienda: %s\nÍtems Seleccionados: %d", savedShopConfig.Merchant, count))
 end)
 
+-- PUNTO 5 CORREGIDO: Borra ÚNICAMENTE la configuración de tienda, muestra alerta y cambia leyenda a "Ninguno"
 BtnClearShopConfig.MouseButton1Click:Connect(function()
     savedShopConfig.Merchant = ""
     savedShopConfig.Items = {}
     saveShopConfigToFile()
     refreshSavedShopConfigBtnText()
-    showAlert("🗑 Configuración Limpiada", "Ya se borró la configuración guardada de la tienda.")
+    showAlert("🗑 Configuración Limpiada", "Se ha borrado únicamente la configuración guardada de tienda.")
 end)
 
+-- PUNTO 8: Toggle independiente para activar la última configuración de tienda
 local AutoStartShopToggle, setAutoStartShopToggleState = createToggle(TabMerchant, "Activar última configuración guardada", savedShopConfig.AutoStart, function(enabled)
     savedShopConfig.AutoStart = enabled
     saveShopConfigToFile()
@@ -2071,7 +2082,7 @@ TabButtons["Huevos"].BackgroundColor3 = THEME.CardBg
 TabButtons["Huevos"].BackgroundTransparency = 0.25
 TabButtons["Huevos"].TextColor3 = THEME.AccentLight
 
--- AUTO ACTIVACIÓN AUTOMÁTICA HUEVOS (15 SEGUNDOS RECOLECTADO REAL)
+-- PUNTO 6 Y 8 CORREGIDOS: Auto activación real de la última configuración de huevo tras 15 segundos sin depender del Auto Hatch manual
 if savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
     task.spawn(function()
         task.wait(15)
@@ -2088,7 +2099,7 @@ if savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" 
     end)
 end
 
--- AUTO ACTIVACIÓN AUTOMÁTICA TIENDAS (20 SEGUNDOS RECOLECTADO REAL)
+-- PUNTO 7 Y 8 CORREGIDOS: Auto activación real de la última configuración de tienda tras 20 segundos sin depender de Auto Compra manual
 if savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
     task.spawn(function()
         task.wait(20)
