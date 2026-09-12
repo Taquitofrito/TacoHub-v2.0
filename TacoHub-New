@@ -1,5 +1,5 @@
 -- =================================================================
--- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio)
+-- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio - Corregido)
 -- =================================================================
 
 if getgenv().TacoHubLoaded and getgenv().TacoHubUnload then
@@ -1574,21 +1574,21 @@ local function refreshSavedConfigBtnText()
     if savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
         BtnSaveEggConfig.Text = string.format("💾 Guardar Conf: [%s - %s]", savedEggConfig.Egg, savedEggConfig.Amount or "50x")
     else
-        BtnSaveEggConfig.Text = "💾 Guardar configuración de huevo"
+        BtnSaveEggConfig.Text = "💾 Guardar última configuración de huevo: [ninguno]"
     end
 end
 refreshSavedConfigBtnText()
 
 BtnSaveEggConfig.MouseButton1Click:Connect(function()
     if not selectedEggValue or selectedEggValue == "" then
-        showAlert("⚠️ Huevo no seleccionado", "Selecciona un huevo primero para poder guardar la configuración.")
+        showAlert("⚠️ Huevo no seleccionado", "No tienes seleccionado ningún huevo. Selecciona uno primero para poder guardar la configuración.")
         return
     end
     savedEggConfig.Egg = selectedEggValue
     savedEggConfig.Amount = selectedAmountValue or "50x"
     saveEggConfigToFile()
     refreshSavedConfigBtnText()
-    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente:\nHuevo: %s\nApertura: %s", savedEggConfig.Egg, savedEggConfig.Amount))
+    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente la configuración:\nHuevo: %s\nApertura: %s", savedEggConfig.Egg, savedEggConfig.Amount))
 end)
 
 BtnClearEggConfig.MouseButton1Click:Connect(function()
@@ -1596,7 +1596,7 @@ BtnClearEggConfig.MouseButton1Click:Connect(function()
     savedEggConfig.Amount = "50x"
     saveEggConfigToFile()
     refreshSavedConfigBtnText()
-    showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada.")
+    showAlert("🗑 Configuración Limpiada", "Ya se borró la configuración guardada del huevo.")
 end)
 
 local AutoStartToggle, setAutoStartToggleState = createToggle(TabHuevos, "Activar última configuración guardada", savedEggConfig.AutoStart, function(enabled)
@@ -1930,14 +1930,14 @@ local function refreshSavedShopConfigBtnText()
     if savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
         BtnSaveShopConfig.Text = string.format("💾 Guardar Conf: [%s - %d Ítems]", savedShopConfig.Merchant, #savedItemsList)
     else
-        BtnSaveShopConfig.Text = "💾 Guardar configuración de tienda"
+        BtnSaveShopConfig.Text = "💾 Guardar última configuración de tienda: [ninguno]"
     end
 end
 refreshSavedShopConfigBtnText()
 
 BtnSaveShopConfig.MouseButton1Click:Connect(function()
     if not selectedMerchantValue or selectedMerchantValue == "" then
-        showAlert("⚠️ Tienda no seleccionada", "Selecciona una tienda primero para poder guardar la configuración.")
+        showAlert("⚠️ Tienda no seleccionada", "No tienes seleccionada ninguna tienda. Selecciona una primero para poder guardar la configuración.")
         return
     end
 
@@ -1955,7 +1955,7 @@ BtnSaveShopConfig.MouseButton1Click:Connect(function()
 
     saveShopConfigToFile()
     refreshSavedShopConfigBtnText()
-    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente:\nTienda: %s\nÍtems Seleccionados: %d", savedShopConfig.Merchant, count))
+    showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente la configuración:\nTienda: %s\nÍtems Seleccionados: %d", savedShopConfig.Merchant, count))
 end)
 
 BtnClearShopConfig.MouseButton1Click:Connect(function()
@@ -1963,7 +1963,7 @@ BtnClearShopConfig.MouseButton1Click:Connect(function()
     savedShopConfig.Items = {}
     saveShopConfigToFile()
     refreshSavedShopConfigBtnText()
-    showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada de tienda.")
+    showAlert("🗑 Configuración Limpiada", "Ya se borró la configuración guardada de la tienda.")
 end)
 
 local AutoStartShopToggle, setAutoStartShopToggleState = createToggle(TabMerchant, "Activar última configuración guardada", savedShopConfig.AutoStart, function(enabled)
@@ -2071,7 +2071,7 @@ TabButtons["Huevos"].BackgroundColor3 = THEME.CardBg
 TabButtons["Huevos"].BackgroundTransparency = 0.25
 TabButtons["Huevos"].TextColor3 = THEME.AccentLight
 
--- AUTO ACTIVACIÓN AUTOMÁTICA HUEVOS (15 SEGUNDOS)
+-- AUTO ACTIVACIÓN AUTOMÁTICA HUEVOS (15 SEGUNDOS RECOLECTADO REAL)
 if savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
     task.spawn(function()
         task.wait(15)
@@ -2083,12 +2083,12 @@ if savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" 
             AmountDropdown.SetValue(savedEggConfig.Amount or "50x")
             
             setAutoHatchToggleState(true)
-            setAutoHatchLogic(true)
+            handleHatchLogic(true)
         end
     end)
 end
 
--- AUTO ACTIVACIÓN AUTOMÁTICA TIENDAS (20 SEGUNDOS)
+-- AUTO ACTIVACIÓN AUTOMÁTICA TIENDAS (20 SEGUNDOS RECOLECTADO REAL)
 if savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
     task.spawn(function()
         task.wait(20)
