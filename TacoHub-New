@@ -1,5 +1,5 @@
 -- =================================================================
--- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio - Corregido)
+-- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio)
 -- =================================================================
 
 if getgenv().TacoHubLoaded and getgenv().TacoHubUnload then
@@ -947,6 +947,14 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
     local function openPicker()
         closeActiveModalPicker()
 
+        local Overlay = Instance.new("TextButton")
+        Overlay.Size = UDim2.fromScale(1, 1)
+        Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Overlay.BackgroundTransparency = 0.55
+        Overlay.Text = ""
+        Overlay.AutoButtonColor = false
+        Overlay.Parent = PickerModalScreen
+
         local Frame = Instance.new("Frame")
         Frame.Size = UDim2.fromOffset(460, 400)
         Frame.Position = UDim2.fromScale(0.5, 0.5)
@@ -956,7 +964,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Frame.BorderSizePixel = 0
         Frame.ClipsDescendants = true
         Frame.Active = true
-        Frame.ZIndex = 35
         Frame.Parent = PickerModalScreen
 
         local fCorner = Instance.new("UICorner")
@@ -974,7 +981,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Title.TextSize = 22
         Title.TextXAlignment = Enum.TextXAlignment.Left
         Title.BackgroundTransparency = 1
-        Title.ZIndex = 36
         Title.Parent = Frame
         applyTextStroke(Title)
 
@@ -986,7 +992,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         CloseModalBtn.Font = Enum.Font.GothamBlack
         CloseModalBtn.TextSize = 22
         CloseModalBtn.BackgroundTransparency = 1
-        CloseModalBtn.ZIndex = 36
         CloseModalBtn.Parent = Frame
         CloseModalBtn.MouseButton1Click:Connect(closeActiveModalPicker)
 
@@ -1001,7 +1006,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         SearchBox.TextColor3 = THEME.Text
         SearchBox.Font = Enum.Font.GothamBold
         SearchBox.TextSize = 17
-        SearchBox.ZIndex = 36
         SearchBox.Parent = Frame
 
         local sbCorner = Instance.new("UICorner")
@@ -1015,7 +1019,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Scroll.BorderSizePixel = 0
         Scroll.ScrollBarThickness = 6
         Scroll.ScrollBarImageColor3 = THEME.AccentLight
-        Scroll.ZIndex = 36
         Scroll.Parent = Frame
 
         local ListLayout = Instance.new("UIListLayout")
@@ -1060,7 +1063,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
             itemBtn.Font = Enum.Font.GothamMedium
             itemBtn.TextSize = 17
             itemBtn.TextXAlignment = Enum.TextXAlignment.Left
-            itemBtn.ZIndex = 37
             itemBtn.Parent = Scroll
 
             local ibCorner = Instance.new("UICorner")
@@ -1092,7 +1094,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         BtnClear.TextColor3 = THEME.Danger
         BtnClear.Font = Enum.Font.GothamBold
         BtnClear.TextSize = 17
-        BtnClear.ZIndex = 36
         BtnClear.Parent = Frame
 
         local bcCorner = Instance.new("UICorner")
@@ -1119,7 +1120,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         BtnConfirm.TextColor3 = THEME.TextDark
         BtnConfirm.Font = Enum.Font.GothamBold
         BtnConfirm.TextSize = 18
-        BtnConfirm.ZIndex = 36
         BtnConfirm.Parent = Frame
 
         local bcfCorner = Instance.new("UICorner")
