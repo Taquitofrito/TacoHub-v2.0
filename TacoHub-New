@@ -1137,6 +1137,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         SetValue = function(val)
             selectedValue = val or ""
             updateText()
+            callback(selectedValue)
         end
     }
 end
@@ -1557,6 +1558,7 @@ local BtnClearEggConfig = Instance.new("TextButton")
 BtnClearEggConfig.Size = UDim2.new(0.32, -5, 1, 0)
 BtnClearEggConfig.Position = UDim2.new(0.68, 5, 0, 0)
 BtnClearEggConfig.BackgroundColor3 = THEME.Danger
+BtnClearShopConfig = BtnClearEggConfig
 BtnClearEggConfig.BackgroundTransparency = 0.35
 BtnClearEggConfig.Text = "🗑 Limpiar"
 BtnClearEggConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -1596,12 +1598,27 @@ BtnClearEggConfig.MouseButton1Click:Connect(function()
     savedEggConfig.Amount = "50x"
     saveEggConfigToFile()
     refreshSavedConfigBtnText()
-    showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada.")
+    showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada de huevo.")
 end)
 
 local AutoStartToggle, setAutoStartToggleState = createToggle(TabHuevos, "Activar última configuración guardada", savedEggConfig.AutoStart, function(enabled)
     savedEggConfig.AutoStart = enabled
     saveEggConfigToFile()
+
+    if enabled then
+        if savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
+            EggDropdown.SetValue(savedEggConfig.Egg)
+            AmountDropdown.SetValue(savedEggConfig.Amount or "50x")
+            setAutoHatchToggleState(true)
+            setAutoHatchLogic(true)
+        else
+            showAlert("⚠️ Sin configuración", "No hay ninguna configuración guardada de huevo para activar.")
+            return false
+        end
+    else
+        setAutoHatchToggleState(false)
+        setAutoHatchLogic(false)
+    end
     return true
 end)
 
@@ -1969,6 +1986,30 @@ end)
 local AutoStartShopToggle, setAutoStartShopToggleState = createToggle(TabMerchant, "Activar última configuración guardada", savedShopConfig.AutoStart, function(enabled)
     savedShopConfig.AutoStart = enabled
     saveShopConfigToFile()
+
+    if enabled then
+        if savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
+            selectedMerchantValue = savedShopConfig.Merchant
+            selectedMerchantItems = {}
+            if typeof(savedShopConfig.Items) == "table" then
+                for item, active in pairs(savedShopConfig.Items) do
+                    if active then selectedMerchantItems[item] = true end
+                end
+            end
+
+            MerchantDropdown.SetValue(savedShopConfig.Merchant)
+            updateSelectItemsBtnText()
+            populateGridItems(savedShopConfig.Merchant)
+            setAutoBuyToggleState(true)
+            startAutoBuyLogic(true)
+        else
+            showAlert("⚠️ Sin configuración", "No hay ninguna configuración guardada de tienda para activar.")
+            return false
+        end
+    else
+        setAutoBuyToggleState(false)
+        startAutoBuyLogic(false)
+    end
     return true
 end)
 
@@ -2076,14 +2117,7 @@ if savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" 
     task.spawn(function()
         task.wait(15)
         if isScriptRunning and savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
-            selectedEggValue = savedEggConfig.Egg
-            selectedAmountValue = savedEggConfig.Amount or "50x"
-            
-            EggDropdown.SetValue(savedEggConfig.Egg)
-            AmountDropdown.SetValue(savedEggConfig.Amount or "50x")
-            
-            setAutoHatchToggleState(true)
-            setAutoHatchLogic(true)
+            setAutoStartToggleState(true)
         end
     end)
 end
@@ -2093,20 +2127,7 @@ if savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Me
     task.spawn(function()
         task.wait(20)
         if isScriptRunning and savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
-            selectedMerchantValue = savedShopConfig.Merchant
-            selectedMerchantItems = {}
-            if typeof(savedShopConfig.Items) == "table" then
-                for item, active in pairs(savedShopConfig.Items) do
-                    if active then selectedMerchantItems[item] = true end
-                end
-            end
-            
-            MerchantDropdown.SetValue(savedShopConfig.Merchant)
-            updateSelectItemsBtnText()
-            populateGridItems(savedShopConfig.Merchant)
-            
-            setAutoBuyToggleState(true)
-            startAutoBuyLogic(true)
+            setAutoStartShopToggleState(true)
         end
     end)
 end
