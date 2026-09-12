@@ -1,5 +1,5 @@
 -- =================================================================
--- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio)
+-- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio - FIXED)
 -- =================================================================
 
 if getgenv().TacoHubLoaded and getgenv().TacoHubUnload then
@@ -366,6 +366,7 @@ AlertOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 AlertOverlay.BackgroundTransparency = 0.5
 AlertOverlay.Text = ""
 AlertOverlay.AutoButtonColor = false
+AlertOverlay.ZIndex = 100
 AlertOverlay.Parent = AlertScreen
 
 local AlertFrame = Instance.new("Frame")
@@ -377,6 +378,7 @@ AlertFrame.BackgroundTransparency = 0.2
 AlertFrame.BorderSizePixel = 0
 AlertFrame.ClipsDescendants = true
 AlertFrame.Active = true
+AlertFrame.ZIndex = 101
 AlertFrame.Parent = AlertScreen
 
 local AlertCorner = Instance.new("UICorner")
@@ -393,6 +395,7 @@ AlertTitle.TextColor3 = THEME.Yellow
 AlertTitle.Font = Enum.Font.GothamBlack
 AlertTitle.TextSize = 22
 AlertTitle.BackgroundTransparency = 1
+AlertTitle.ZIndex = 102
 AlertTitle.Parent = AlertFrame
 
 local AlertMsg = Instance.new("TextLabel")
@@ -404,6 +407,7 @@ AlertMsg.Font = Enum.Font.GothamMedium
 AlertMsg.TextSize = 17
 AlertMsg.TextWrapped = true
 AlertMsg.BackgroundTransparency = 1
+AlertMsg.ZIndex = 102
 AlertMsg.Parent = AlertFrame
 
 local BtnAlertOk = Instance.new("TextButton")
@@ -415,6 +419,7 @@ BtnAlertOk.Text = "Entendido"
 BtnAlertOk.TextColor3 = Color3.fromRGB(255, 255, 255)
 BtnAlertOk.Font = Enum.Font.GothamBold
 BtnAlertOk.TextSize = 17
+BtnAlertOk.ZIndex = 103
 BtnAlertOk.Parent = AlertFrame
 
 local btnAlertCorner = Instance.new("UICorner")
@@ -446,6 +451,7 @@ OverlayBlocker.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 OverlayBlocker.BackgroundTransparency = 0.5
 OverlayBlocker.Text = ""
 OverlayBlocker.AutoButtonColor = false
+OverlayBlocker.ZIndex = 90
 OverlayBlocker.Parent = ConfirmScreen
 
 local ConfirmFrame = Instance.new("Frame")
@@ -457,6 +463,7 @@ ConfirmFrame.BackgroundTransparency = 0.2
 ConfirmFrame.BorderSizePixel = 0
 ConfirmFrame.ClipsDescendants = true
 ConfirmFrame.Active = true
+ConfirmFrame.ZIndex = 91
 ConfirmFrame.Parent = ConfirmScreen
 
 local ConfirmCorner = Instance.new("UICorner")
@@ -473,6 +480,7 @@ ConfirmTitle.TextColor3 = THEME.Danger
 ConfirmTitle.Font = Enum.Font.GothamBlack
 ConfirmTitle.TextSize = 22
 ConfirmTitle.BackgroundTransparency = 1
+ConfirmTitle.ZIndex = 92
 ConfirmTitle.Parent = ConfirmFrame
 
 local ConfirmMsg = Instance.new("TextLabel")
@@ -484,6 +492,7 @@ ConfirmMsg.Font = Enum.Font.GothamMedium
 ConfirmMsg.TextSize = 17
 ConfirmMsg.TextWrapped = true
 ConfirmMsg.BackgroundTransparency = 1
+ConfirmMsg.ZIndex = 92
 ConfirmMsg.Parent = ConfirmFrame
 
 local BtnYes = Instance.new("TextButton")
@@ -495,6 +504,7 @@ BtnYes.Text = "Sí, Cerrar"
 BtnYes.TextColor3 = Color3.fromRGB(255, 255, 255)
 BtnYes.Font = Enum.Font.GothamBold
 BtnYes.TextSize = 18
+BtnYes.ZIndex = 93
 BtnYes.Parent = ConfirmFrame
 
 local btnYesCorner = Instance.new("UICorner")
@@ -512,6 +522,7 @@ BtnNo.Text = "Cancelar"
 BtnNo.TextColor3 = THEME.Text
 BtnNo.Font = Enum.Font.GothamBold
 BtnNo.TextSize = 18
+BtnNo.ZIndex = 93
 BtnNo.Parent = ConfirmFrame
 
 local btnNoCorner = Instance.new("UICorner")
@@ -540,6 +551,7 @@ MainFrame.BackgroundTransparency = 0.15
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Active = true
+MainFrame.ZIndex = 1
 MainFrame.Parent = MainScreen
 
 local MainCorner = Instance.new("UICorner")
@@ -555,7 +567,7 @@ MainHeader.BackgroundTransparency = 0.3
 MainHeader.BorderSizePixel = 0
 MainHeader.ClipsDescendants = true
 MainHeader.Active = true
-MainHeader.ZIndex = 2
+MainHeader.ZIndex = 5
 MainHeader.Parent = MainFrame
 
 local HeaderCorner = Instance.new("UICorner")
@@ -574,12 +586,11 @@ TitleText.Font = Enum.Font.GothamBlack
 TitleText.TextSize = 24
 TitleText.TextXAlignment = Enum.TextXAlignment.Left
 TitleText.BackgroundTransparency = 1
-TitleText.ZIndex = 3
+TitleText.ZIndex = 6
 TitleText.Parent = MainHeader
 
 applyTextStroke(TitleText)
 
--- BARRAS DE MINIMIZAR Y CERRAR CON BORDE ESTILO BOTÓN TRASLÚCIDO OVALADO
 local MinimizeMainBtn = Instance.new("TextButton")
 MinimizeMainBtn.Size = UDim2.fromOffset(36, 32)
 MinimizeMainBtn.Position = UDim2.new(1, -135, 0.5, -16)
@@ -589,7 +600,7 @@ MinimizeMainBtn.Font = Enum.Font.GothamBlack
 MinimizeMainBtn.TextSize = 22
 MinimizeMainBtn.BackgroundColor3 = THEME.CardBg
 MinimizeMainBtn.BackgroundTransparency = 0.4
-MinimizeMainBtn.ZIndex = 3
+MinimizeMainBtn.ZIndex = 7
 MinimizeMainBtn.Parent = MainHeader
 
 local minCorner = Instance.new("UICorner")
@@ -613,7 +624,7 @@ CloseMainBtn.Font = Enum.Font.GothamBold
 CloseMainBtn.TextSize = 15
 CloseMainBtn.BackgroundColor3 = THEME.CardBg
 CloseMainBtn.BackgroundTransparency = 0.4
-CloseMainBtn.ZIndex = 3
+CloseMainBtn.ZIndex = 7
 CloseMainBtn.Parent = MainHeader
 
 local closeBtnCorner = Instance.new("UICorner")
@@ -687,7 +698,8 @@ local function createTab(name, icon)
     tabContainer.ScrollBarThickness = 6
     tabContainer.ScrollBarImageColor3 = THEME.AccentLight
     tabContainer.Visible = false
-    tabContainer.ZIndex = 2
+    tabContainer.ZIndex = 3
+    tabContainer.Active = false
     tabContainer.Parent = ContentArea
 
     local tabList = Instance.new("UIListLayout")
@@ -708,7 +720,7 @@ local function createTab(name, icon)
     btn.Font = Enum.Font.GothamBlack
     btn.TextSize = 17
     btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.ZIndex = 3
+    btn.ZIndex = 4
     btn.Parent = Sidebar
 
     applyTextStroke(btn)
@@ -754,7 +766,7 @@ local function createSectionHeader(parent, text)
     lbl.TextSize = 20
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.BackgroundTransparency = 1
-    lbl.ZIndex = 2
+    lbl.ZIndex = 4
     lbl.Parent = parent
     applyTextStroke(lbl)
     return lbl
@@ -768,7 +780,8 @@ local function createCard(parent, title)
     card.BackgroundColor3 = THEME.CardBg
     card.BackgroundTransparency = 0.4
     card.ClipsDescendants = true
-    card.ZIndex = 2
+    card.ZIndex = 4
+    card.Active = false
     card.Parent = parent
 
     local cCorner = Instance.new("UICorner")
@@ -788,7 +801,7 @@ local function createCard(parent, title)
     tLbl.TextSize = 18
     tLbl.TextXAlignment = Enum.TextXAlignment.Left
     tLbl.BackgroundTransparency = 1
-    tLbl.ZIndex = 3
+    tLbl.ZIndex = 5
     tLbl.Parent = card
     applyTextStroke(tLbl)
 
@@ -805,13 +818,12 @@ local function createCard(parent, title)
     cLbl.TextYAlignment = Enum.TextYAlignment.Top
     cLbl.TextWrapped = true
     cLbl.BackgroundTransparency = 1
-    cLbl.ZIndex = 3
+    cLbl.ZIndex = 5
     cLbl.Parent = card
 
     return card, cLbl, tLbl
 end
 
--- TOGGLE CON SWITCH CIRCULAR PERFECTO Y TRASLÚCIDO
 local function createToggle(parent, text, default, callback)
     local container = Instance.new("Frame")
     container.Size = UDim2.new(1, -4, 0, 56)
@@ -819,7 +831,8 @@ local function createToggle(parent, text, default, callback)
     container.BackgroundColor3 = THEME.CardBg
     container.BackgroundTransparency = 0.4
     container.ClipsDescendants = true
-    container.ZIndex = 2
+    container.ZIndex = 4
+    container.Active = false
     container.Parent = parent
 
     local cCorner = Instance.new("UICorner")
@@ -837,7 +850,7 @@ local function createToggle(parent, text, default, callback)
     lbl.TextSize = 18
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.BackgroundTransparency = 1
-    lbl.ZIndex = 3
+    lbl.ZIndex = 5
     lbl.Parent = container
 
     local toggleBtn = Instance.new("TextButton")
@@ -847,7 +860,7 @@ local function createToggle(parent, text, default, callback)
     toggleBtn.BackgroundColor3 = default and THEME.Accent or THEME.Sidebar
     toggleBtn.BackgroundTransparency = 0.3
     toggleBtn.ClipsDescendants = true
-    toggleBtn.ZIndex = 3
+    toggleBtn.ZIndex = 6
     toggleBtn.Parent = container
 
     local tCorner = Instance.new("UICorner")
@@ -856,13 +869,12 @@ local function createToggle(parent, text, default, callback)
 
     createNeonStroke(toggleBtn, THEME.AccentLight, 1)
 
-    -- CÍRCULO INTERNO
     local circle = Instance.new("Frame")
     circle.Size = UDim2.fromOffset(22, 22)
     circle.Position = default and UDim2.new(1, -26, 0.5, -11) or UDim2.new(0, 4, 0.5, -11)
     circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     circle.BorderSizePixel = 0
-    circle.ZIndex = 4
+    circle.ZIndex = 7
     circle.Parent = toggleBtn
 
     local cirCorner = Instance.new("UICorner")
@@ -896,7 +908,8 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
     container.BackgroundColor3 = THEME.CardBg
     container.BackgroundTransparency = 0.4
     container.ClipsDescendants = true
-    container.ZIndex = 2
+    container.ZIndex = 4
+    container.Active = false
     container.Parent = parent
 
     local cCorner = Instance.new("UICorner")
@@ -915,7 +928,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
     TitleLbl.TextSize = 18
     TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
     TitleLbl.BackgroundTransparency = 1
-    TitleLbl.ZIndex = 3
+    TitleLbl.ZIndex = 5
     TitleLbl.Parent = container
 
     local ActionBtn = Instance.new("TextButton")
@@ -929,7 +942,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
     ActionBtn.TextSize = 15
     ActionBtn.BorderSizePixel = 0
     ActionBtn.TextWrapped = true
-    ActionBtn.ZIndex = 3
+    ActionBtn.ZIndex = 6
     ActionBtn.Parent = container
 
     local abCorner = Instance.new("UICorner")
@@ -953,6 +966,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Overlay.BackgroundTransparency = 0.55
         Overlay.Text = ""
         Overlay.AutoButtonColor = false
+        Overlay.ZIndex = 50
         Overlay.Parent = PickerModalScreen
 
         local Frame = Instance.new("Frame")
@@ -964,6 +978,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Frame.BorderSizePixel = 0
         Frame.ClipsDescendants = true
         Frame.Active = true
+        Frame.ZIndex = 51
         Frame.Parent = PickerModalScreen
 
         local fCorner = Instance.new("UICorner")
@@ -981,6 +996,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Title.TextSize = 22
         Title.TextXAlignment = Enum.TextXAlignment.Left
         Title.BackgroundTransparency = 1
+        Title.ZIndex = 52
         Title.Parent = Frame
         applyTextStroke(Title)
 
@@ -992,6 +1008,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         CloseModalBtn.Font = Enum.Font.GothamBlack
         CloseModalBtn.TextSize = 22
         CloseModalBtn.BackgroundTransparency = 1
+        CloseModalBtn.ZIndex = 53
         CloseModalBtn.Parent = Frame
         CloseModalBtn.MouseButton1Click:Connect(closeActiveModalPicker)
 
@@ -1006,6 +1023,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         SearchBox.TextColor3 = THEME.Text
         SearchBox.Font = Enum.Font.GothamBold
         SearchBox.TextSize = 17
+        SearchBox.ZIndex = 52
         SearchBox.Parent = Frame
 
         local sbCorner = Instance.new("UICorner")
@@ -1019,6 +1037,8 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Scroll.BorderSizePixel = 0
         Scroll.ScrollBarThickness = 6
         Scroll.ScrollBarImageColor3 = THEME.AccentLight
+        Scroll.ZIndex = 52
+        Scroll.Active = false
         Scroll.Parent = Frame
 
         local ListLayout = Instance.new("UIListLayout")
@@ -1063,6 +1083,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
             itemBtn.Font = Enum.Font.GothamMedium
             itemBtn.TextSize = 17
             itemBtn.TextXAlignment = Enum.TextXAlignment.Left
+            itemBtn.ZIndex = 53
             itemBtn.Parent = Scroll
 
             local ibCorner = Instance.new("UICorner")
@@ -1094,6 +1115,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         BtnClear.TextColor3 = THEME.Danger
         BtnClear.Font = Enum.Font.GothamBold
         BtnClear.TextSize = 17
+        BtnClear.ZIndex = 53
         BtnClear.Parent = Frame
 
         local bcCorner = Instance.new("UICorner")
@@ -1120,6 +1142,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         BtnConfirm.TextColor3 = THEME.TextDark
         BtnConfirm.Font = Enum.Font.GothamBold
         BtnConfirm.TextSize = 18
+        BtnConfirm.ZIndex = 53
         BtnConfirm.Parent = Frame
 
         local bcfCorner = Instance.new("UICorner")
@@ -1196,7 +1219,6 @@ TitleLbl.Parent = HeaderBar
 
 applyTextStroke(TitleLbl)
 
--- BOTÓN VOLVER TRASLÚCIDO Y OVALADO
 local ReturnMainBtn = Instance.new("TextButton")
 ReturnMainBtn.Size = UDim2.fromOffset(80, 28)
 ReturnMainBtn.Position = UDim2.new(1, -112, 0.5, -14)
@@ -1325,6 +1347,7 @@ ScrollFloat.BorderSizePixel = 0
 ScrollFloat.ScrollBarThickness = 5
 ScrollFloat.ScrollBarImageColor3 = THEME.AccentLight
 ScrollFloat.ZIndex = 2
+ScrollFloat.Active = false
 ScrollFloat.Parent = FloatFrame
 
 local FloatList = Instance.new("UIListLayout")
@@ -1528,12 +1551,13 @@ local EggDropdown = createCustomDropdown(TabHuevos, "Huevo activo", "Seleccionar
     updateOverlayUI()
 end)
 
--- CONTROLES DE CONFIGURACIÓN PERSISTENTE (HUEVOS) CON ESTILO OVALADO TRASLÚCIDO Y CORRECCIÓN DE DESBORDE
 local ConfigContainer = Instance.new("Frame")
 ConfigContainer.Size = UDim2.new(1, -4, 0, 52)
 ConfigContainer.Position = UDim2.new(0, 2, 0, 0)
 ConfigContainer.BackgroundTransparency = 1
 ConfigContainer.ClipsDescendants = true
+ConfigContainer.ZIndex = 4
+ConfigContainer.Active = false
 ConfigContainer.Parent = TabHuevos
 
 local BtnSaveEggConfig = Instance.new("TextButton")
@@ -1545,6 +1569,7 @@ BtnSaveEggConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
 BtnSaveEggConfig.Font = Enum.Font.GothamBold
 BtnSaveEggConfig.TextSize = 14
 BtnSaveEggConfig.TextWrapped = true
+BtnSaveEggConfig.ZIndex = 5
 BtnSaveEggConfig.Parent = ConfigContainer
 
 local saveCorner = Instance.new("UICorner")
@@ -1562,6 +1587,7 @@ BtnClearEggConfig.Text = "🗑 Limpiar"
 BtnClearEggConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
 BtnClearEggConfig.Font = Enum.Font.GothamBold
 BtnClearEggConfig.TextSize = 15
+BtnClearEggConfig.ZIndex = 5
 BtnClearEggConfig.Parent = ConfigContainer
 
 local clearCorner = Instance.new("UICorner")
@@ -1579,7 +1605,6 @@ local function refreshSavedConfigBtnText()
 end
 refreshSavedConfigBtnText()
 
--- PUNTO 2 CORREGIDO: Guarda correctamente si hay huevo seleccionado, o lanza alerta si no hay.
 BtnSaveEggConfig.MouseButton1Click:Connect(function()
     if not selectedEggValue or selectedEggValue == "" then
         showAlert("⚠️ Huevo no seleccionado", "No tienes ningún huevo seleccionado. Por favor selecciona uno primero.")
@@ -1592,7 +1617,6 @@ BtnSaveEggConfig.MouseButton1Click:Connect(function()
     showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente la configuración del huevo:\nHuevo: %s\nApertura: %s", savedEggConfig.Egg, savedEggConfig.Amount))
 end)
 
--- PUNTO 3 CORREGIDO: Muestra mensaje de confirmación y cambia la leyenda a "Ninguno"
 BtnClearEggConfig.MouseButton1Click:Connect(function()
     savedEggConfig.Egg = ""
     savedEggConfig.Amount = "50x"
@@ -1601,7 +1625,6 @@ BtnClearEggConfig.MouseButton1Click:Connect(function()
     showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada de huevo.")
 end)
 
--- PUNTO 8: Toggle independiente de activación de última configuración de huevo
 local AutoStartToggle, setAutoStartToggleState = createToggle(TabHuevos, "Activar última configuración guardada", savedEggConfig.AutoStart, function(enabled)
     savedEggConfig.AutoStart = enabled
     saveEggConfigToFile()
@@ -1632,6 +1655,7 @@ ModalFrame.BackgroundTransparency = 0.15
 ModalFrame.BorderSizePixel = 0
 ModalFrame.ClipsDescendants = true
 ModalFrame.Active = true
+ModalFrame.ZIndex = 60
 ModalFrame.Parent = ModalScreen
 
 local ModalCorner = Instance.new("UICorner")
@@ -1649,6 +1673,7 @@ ModalTitle.Font = Enum.Font.GothamBlack
 ModalTitle.TextSize = 21
 ModalTitle.TextXAlignment = Enum.TextXAlignment.Left
 ModalTitle.BackgroundTransparency = 1
+ModalTitle.ZIndex = 61
 ModalTitle.Parent = ModalFrame
 applyTextStroke(ModalTitle)
 
@@ -1660,6 +1685,7 @@ CloseBtn.TextColor3 = THEME.Danger
 CloseBtn.Font = Enum.Font.GothamBlack
 CloseBtn.TextSize = 22
 CloseBtn.BackgroundTransparency = 1
+CloseBtn.ZIndex = 62
 CloseBtn.Parent = ModalFrame
 CloseBtn.MouseButton1Click:Connect(function() ModalScreen.Enabled = false end)
 
@@ -1670,6 +1696,8 @@ ModalScroll.BackgroundTransparency = 1
 ModalScroll.BorderSizePixel = 0
 ModalScroll.ScrollBarThickness = 6
 ModalScroll.ScrollBarImageColor3 = THEME.AccentLight
+ModalScroll.ZIndex = 61
+ModalScroll.Active = false
 ModalScroll.Parent = ModalFrame
 
 local ModalGrid = Instance.new("UIGridLayout")
@@ -1687,6 +1715,7 @@ ConfirmModalBtn.Text = "✓ Confirmar Selección"
 ConfirmModalBtn.TextColor3 = THEME.TextDark
 ConfirmModalBtn.Font = Enum.Font.GothamBold
 ConfirmModalBtn.TextSize = 19
+ConfirmModalBtn.ZIndex = 62
 ConfirmModalBtn.Parent = ModalFrame
 
 local confirmCorner = Instance.new("UICorner")
@@ -1712,7 +1741,6 @@ updateSelectItemsBtnText = function()
     end
 end
 
--- PUNTO 1 CORREGIDO: Mapeo y generación dinámica de items en tiempo real al abrir o cambiar la tienda.
 local populateGridItems = function(merchantName)
     for _, child in ipairs(ModalScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
@@ -1720,7 +1748,6 @@ local populateGridItems = function(merchantName)
 
     if not merchantName or merchantName == "" then return end
 
-    -- Re-obtener mapas por si Knit cargó items dinámicos
     local _, dynamicItemsMap, dynamicDataMap = getAllMerchantItems()
     local items = dynamicItemsMap[merchantName] or merchantItemsMap[merchantName] or {}
     
@@ -1732,6 +1759,7 @@ local populateGridItems = function(merchantName)
         btn.Font = Enum.Font.GothamMedium
         btn.TextSize = 14
         btn.TextWrapped = true
+        btn.ZIndex = 62
         btn.Parent = ModalScroll
 
         local corner = Instance.new("UICorner")
@@ -1866,6 +1894,7 @@ SelectItemsBtn.TextSize = 17
 SelectItemsBtn.BorderSizePixel = 0
 SelectItemsBtn.ClipsDescendants = true
 SelectItemsBtn.TextWrapped = true
+SelectItemsBtn.ZIndex = 5
 SelectItemsBtn.Parent = TabMerchant
 
 local sibCorner = Instance.new("UICorner")
@@ -1874,7 +1903,6 @@ sibCorner.Parent = SelectItemsBtn
 
 createNeonStroke(SelectItemsBtn, THEME.Border, 1)
 
--- PUNTO 1 CORREGIDO: Abre la ventana modal cargando correctamente la lista de items
 SelectItemsBtn.MouseButton1Click:Connect(function()
     if selectedMerchantValue and selectedMerchantValue ~= "" then
         ModalTitle.Text = "Ítems: " .. tostring(selectedMerchantValue)
@@ -1885,12 +1913,13 @@ SelectItemsBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- CONTROLES DE CONFIGURACIÓN PERSISTENTE (TIENDAS)
 local ShopConfigContainer = Instance.new("Frame")
 ShopConfigContainer.Size = UDim2.new(1, -4, 0, 52)
 ShopConfigContainer.Position = UDim2.new(0, 2, 0, 0)
 ShopConfigContainer.BackgroundTransparency = 1
 ShopConfigContainer.ClipsDescendants = true
+ShopConfigContainer.ZIndex = 4
+ShopConfigContainer.Active = false
 ShopConfigContainer.Parent = TabMerchant
 
 local BtnSaveShopConfig = Instance.new("TextButton")
@@ -1902,6 +1931,7 @@ BtnSaveShopConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
 BtnSaveShopConfig.Font = Enum.Font.GothamBold
 BtnSaveShopConfig.TextSize = 14
 BtnSaveShopConfig.TextWrapped = true
+BtnSaveShopConfig.ZIndex = 5
 BtnSaveShopConfig.Parent = ShopConfigContainer
 
 local saveShopCorner = Instance.new("UICorner")
@@ -1919,6 +1949,7 @@ BtnClearShopConfig.Text = "🗑 Limpiar"
 BtnClearShopConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
 BtnClearShopConfig.Font = Enum.Font.GothamBold
 BtnClearShopConfig.TextSize = 15
+BtnClearShopConfig.ZIndex = 5
 BtnClearShopConfig.Parent = ShopConfigContainer
 
 local clearShopCorner = Instance.new("UICorner")
@@ -1943,7 +1974,6 @@ local function refreshSavedShopConfigBtnText()
 end
 refreshSavedShopConfigBtnText()
 
--- PUNTO 4 CORREGIDO: Guarda la configuración de la tienda activa y sus ítems, alertando si falta alguno.
 BtnSaveShopConfig.MouseButton1Click:Connect(function()
     if not selectedMerchantValue or selectedMerchantValue == "" then
         showAlert("⚠️ Tienda no seleccionada", "No tienes ninguna tienda seleccionada. Por favor selecciona una primero.")
@@ -1967,7 +1997,6 @@ BtnSaveShopConfig.MouseButton1Click:Connect(function()
     showAlert("✓ Configuración Guardada", string.format("Se guardó correctamente la configuración de la tienda:\nTienda: %s\nÍtems Seleccionados: %d", savedShopConfig.Merchant, count))
 end)
 
--- PUNTO 5 CORREGIDO: Borra ÚNICAMENTE la configuración de tienda, muestra alerta y cambia leyenda a "Ninguno"
 BtnClearShopConfig.MouseButton1Click:Connect(function()
     savedShopConfig.Merchant = ""
     savedShopConfig.Items = {}
@@ -1976,7 +2005,6 @@ BtnClearShopConfig.MouseButton1Click:Connect(function()
     showAlert("🗑 Configuración Limpiada", "Se ha borrado únicamente la configuración guardada de tienda.")
 end)
 
--- PUNTO 8: Toggle independiente para activar la última configuración de tienda
 local AutoStartShopToggle, setAutoStartShopToggleState = createToggle(TabMerchant, "Activar última configuración guardada", savedShopConfig.AutoStart, function(enabled)
     savedShopConfig.AutoStart = enabled
     saveShopConfigToFile()
@@ -2082,7 +2110,7 @@ TabButtons["Huevos"].BackgroundColor3 = THEME.CardBg
 TabButtons["Huevos"].BackgroundTransparency = 0.25
 TabButtons["Huevos"].TextColor3 = THEME.AccentLight
 
--- PUNTO 6 Y 8 CORREGIDOS: Auto activación real de la última configuración de huevo tras 15 segundos sin depender del Auto Hatch manual
+-- AUTO ACTIVACIÓN RECURSIVA Y CORREGIDA
 if savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
     task.spawn(function()
         task.wait(15)
@@ -2099,7 +2127,6 @@ if savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" 
     end)
 end
 
--- PUNTO 7 Y 8 CORREGIDOS: Auto activación real de la última configuración de tienda tras 20 segundos sin depender de Auto Compra manual
 if savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
     task.spawn(function()
         task.wait(20)
@@ -2122,7 +2149,7 @@ if savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Me
     end)
 end
 
--- BUCLE TEMPORIZADOR AISLADO Y ULTRA-LIGERO
+-- BUCLE TEMPORIZADOR
 task.spawn(function()
     while isScriptRunning do
         if merchantTimerEndTime then
