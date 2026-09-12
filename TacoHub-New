@@ -1,5 +1,5 @@
 -- =================================================================
--- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio)
+-- TACOHUB v2.0 (Edición Traslúcida & Estilo Ovalado Limpio - Corregido)
 -- =================================================================
 
 if getgenv().TacoHubLoaded and getgenv().TacoHubUnload then
@@ -947,14 +947,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
     local function openPicker()
         closeActiveModalPicker()
 
-        local Overlay = Instance.new("TextButton")
-        Overlay.Size = UDim2.fromScale(1, 1)
-        Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        Overlay.BackgroundTransparency = 0.55
-        Overlay.Text = ""
-        Overlay.AutoButtonColor = false
-        Overlay.Parent = PickerModalScreen
-
         local Frame = Instance.new("Frame")
         Frame.Size = UDim2.fromOffset(460, 400)
         Frame.Position = UDim2.fromScale(0.5, 0.5)
@@ -964,6 +956,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Frame.BorderSizePixel = 0
         Frame.ClipsDescendants = true
         Frame.Active = true
+        Frame.ZIndex = 35
         Frame.Parent = PickerModalScreen
 
         local fCorner = Instance.new("UICorner")
@@ -981,6 +974,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Title.TextSize = 22
         Title.TextXAlignment = Enum.TextXAlignment.Left
         Title.BackgroundTransparency = 1
+        Title.ZIndex = 36
         Title.Parent = Frame
         applyTextStroke(Title)
 
@@ -992,6 +986,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         CloseModalBtn.Font = Enum.Font.GothamBlack
         CloseModalBtn.TextSize = 22
         CloseModalBtn.BackgroundTransparency = 1
+        CloseModalBtn.ZIndex = 36
         CloseModalBtn.Parent = Frame
         CloseModalBtn.MouseButton1Click:Connect(closeActiveModalPicker)
 
@@ -1006,6 +1001,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         SearchBox.TextColor3 = THEME.Text
         SearchBox.Font = Enum.Font.GothamBold
         SearchBox.TextSize = 17
+        SearchBox.ZIndex = 36
         SearchBox.Parent = Frame
 
         local sbCorner = Instance.new("UICorner")
@@ -1019,6 +1015,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         Scroll.BorderSizePixel = 0
         Scroll.ScrollBarThickness = 6
         Scroll.ScrollBarImageColor3 = THEME.AccentLight
+        Scroll.ZIndex = 36
         Scroll.Parent = Frame
 
         local ListLayout = Instance.new("UIListLayout")
@@ -1063,6 +1060,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
             itemBtn.Font = Enum.Font.GothamMedium
             itemBtn.TextSize = 17
             itemBtn.TextXAlignment = Enum.TextXAlignment.Left
+            itemBtn.ZIndex = 37
             itemBtn.Parent = Scroll
 
             local ibCorner = Instance.new("UICorner")
@@ -1094,6 +1092,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         BtnClear.TextColor3 = THEME.Danger
         BtnClear.Font = Enum.Font.GothamBold
         BtnClear.TextSize = 17
+        BtnClear.ZIndex = 36
         BtnClear.Parent = Frame
 
         local bcCorner = Instance.new("UICorner")
@@ -1120,6 +1119,7 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         BtnConfirm.TextColor3 = THEME.TextDark
         BtnConfirm.Font = Enum.Font.GothamBold
         BtnConfirm.TextSize = 18
+        BtnConfirm.ZIndex = 36
         BtnConfirm.Parent = Frame
 
         local bcfCorner = Instance.new("UICorner")
@@ -1137,7 +1137,6 @@ local function createCustomDropdown(parent, labelText, btnText, options, default
         SetValue = function(val)
             selectedValue = val or ""
             updateText()
-            callback(selectedValue)
         end
     }
 end
@@ -1558,7 +1557,6 @@ local BtnClearEggConfig = Instance.new("TextButton")
 BtnClearEggConfig.Size = UDim2.new(0.32, -5, 1, 0)
 BtnClearEggConfig.Position = UDim2.new(0.68, 5, 0, 0)
 BtnClearEggConfig.BackgroundColor3 = THEME.Danger
-BtnClearShopConfig = BtnClearEggConfig
 BtnClearEggConfig.BackgroundTransparency = 0.35
 BtnClearEggConfig.Text = "🗑 Limpiar"
 BtnClearEggConfig.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -1598,27 +1596,12 @@ BtnClearEggConfig.MouseButton1Click:Connect(function()
     savedEggConfig.Amount = "50x"
     saveEggConfigToFile()
     refreshSavedConfigBtnText()
-    showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada de huevo.")
+    showAlert("🗑 Configuración Limpiada", "Se ha borrado la configuración guardada.")
 end)
 
 local AutoStartToggle, setAutoStartToggleState = createToggle(TabHuevos, "Activar última configuración guardada", savedEggConfig.AutoStart, function(enabled)
     savedEggConfig.AutoStart = enabled
     saveEggConfigToFile()
-
-    if enabled then
-        if savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
-            EggDropdown.SetValue(savedEggConfig.Egg)
-            AmountDropdown.SetValue(savedEggConfig.Amount or "50x")
-            setAutoHatchToggleState(true)
-            setAutoHatchLogic(true)
-        else
-            showAlert("⚠️ Sin configuración", "No hay ninguna configuración guardada de huevo para activar.")
-            return false
-        end
-    else
-        setAutoHatchToggleState(false)
-        setAutoHatchLogic(false)
-    end
     return true
 end)
 
@@ -1986,30 +1969,6 @@ end)
 local AutoStartShopToggle, setAutoStartShopToggleState = createToggle(TabMerchant, "Activar última configuración guardada", savedShopConfig.AutoStart, function(enabled)
     savedShopConfig.AutoStart = enabled
     saveShopConfigToFile()
-
-    if enabled then
-        if savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
-            selectedMerchantValue = savedShopConfig.Merchant
-            selectedMerchantItems = {}
-            if typeof(savedShopConfig.Items) == "table" then
-                for item, active in pairs(savedShopConfig.Items) do
-                    if active then selectedMerchantItems[item] = true end
-                end
-            end
-
-            MerchantDropdown.SetValue(savedShopConfig.Merchant)
-            updateSelectItemsBtnText()
-            populateGridItems(savedShopConfig.Merchant)
-            setAutoBuyToggleState(true)
-            startAutoBuyLogic(true)
-        else
-            showAlert("⚠️ Sin configuración", "No hay ninguna configuración guardada de tienda para activar.")
-            return false
-        end
-    else
-        setAutoBuyToggleState(false)
-        startAutoBuyLogic(false)
-    end
     return true
 end)
 
@@ -2117,7 +2076,14 @@ if savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" 
     task.spawn(function()
         task.wait(15)
         if isScriptRunning and savedEggConfig.AutoStart and savedEggConfig.Egg and savedEggConfig.Egg ~= "" then
-            setAutoStartToggleState(true)
+            selectedEggValue = savedEggConfig.Egg
+            selectedAmountValue = savedEggConfig.Amount or "50x"
+            
+            EggDropdown.SetValue(savedEggConfig.Egg)
+            AmountDropdown.SetValue(savedEggConfig.Amount or "50x")
+            
+            setAutoHatchToggleState(true)
+            setAutoHatchLogic(true)
         end
     end)
 end
@@ -2127,7 +2093,20 @@ if savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Me
     task.spawn(function()
         task.wait(20)
         if isScriptRunning and savedShopConfig.AutoStart and savedShopConfig.Merchant and savedShopConfig.Merchant ~= "" then
-            setAutoStartShopToggleState(true)
+            selectedMerchantValue = savedShopConfig.Merchant
+            selectedMerchantItems = {}
+            if typeof(savedShopConfig.Items) == "table" then
+                for item, active in pairs(savedShopConfig.Items) do
+                    if active then selectedMerchantItems[item] = true end
+                end
+            end
+            
+            MerchantDropdown.SetValue(savedShopConfig.Merchant)
+            updateSelectItemsBtnText()
+            populateGridItems(savedShopConfig.Merchant)
+            
+            setAutoBuyToggleState(true)
+            startAutoBuyLogic(true)
         end
     end)
 end
